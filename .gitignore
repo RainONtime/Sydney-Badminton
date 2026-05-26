@@ -1,0 +1,18 @@
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Claude Code local session data
+.claude/
+
+# Editor & OS
+.DS_Store
+Thumbs.db
+*.log
