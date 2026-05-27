@@ -109,7 +109,7 @@ export default function AdminEvents() {
       )}
 
       {loading ? (
-        <LoadingSpinner />
+        <div className="py-20 flex items-center justify-center"><LoadingSpinner /></div>
       ) : events.length === 0 ? (
         <div className="text-center py-24">
           <p className="text-sm text-gray-400 mb-5">还没有活动</p>

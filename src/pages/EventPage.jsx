@@ -13,42 +13,71 @@ const EMPTY_FORM = { name: '', gender: '', level: '', notes: '', quantity: 1 }
 
 export default function EventPage() {
   const { id } = useParams()
-  const [event, setEvent] = useState(null)
+  const [event, setEvent]               = useState(null)
   const [registrations, setRegistrations] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [step, setStep] = useState(1) // 1=form, 2=payment, 3=success
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [loading, setLoading]           = useState(true)
+  const [pageError, setPageError]       = useState('') // network / server error
+  const [step, setStep]                 = useState(1)  // 1=form 2=payment 3=success
+  const [submitting, setSubmitting]     = useState(false)
+  const [error, setError]               = useState('')
+  const [form, setForm]                 = useState(EMPTY_FORM)
   const [wasWaitlisted, setWasWaitlisted] = useState(false)
 
   useEffect(() => {
     async function load() {
       setLoading(true)
-      const [{ data: ev }, { data: regs }] = await Promise.all([
+      setPageError('')
+
+      const [{ data: ev, error: evErr }, { data: regs }] = await Promise.all([
         getEventById(id),
         getRegistrationsByEvent(id),
       ])
-      setEvent(ev)
+
+      if (evErr) {
+        // Network / Supabase error — distinct from "event not found"
+        setPageError('加载失败，请刷新重试')
+        setLoading(false)
+        return
+      }
+
+      setEvent(ev)             // null if event truly doesn't exist
       setRegistrations(regs || [])
       setLoading(false)
     }
     load()
   }, [id])
 
-  if (loading) return <div className="max-w-2xl mx-auto px-5 py-12"><LoadingSpinner /></div>
+  /* ── Guards ──────────────────────────────────────────────────── */
+
+  if (loading) return (
+    <div className="min-h-[70vh] flex items-center justify-center">
+      <LoadingSpinner text="正在加载活动..." />
+    </div>
+  )
+
+  if (pageError) return (
+    <div className="max-w-2xl mx-auto px-5 py-24 text-center">
+      <p className="text-sm text-red-400 mb-4">{pageError}</p>
+      <Link to="/" className="text-xs text-gray-500 hover:text-gray-950 underline underline-offset-2 transition-colors">
+        ← 返回首页
+      </Link>
+    </div>
+  )
+
   if (!event) return (
-    <div className="max-w-2xl mx-auto px-5 py-12 text-center">
+    <div className="max-w-2xl mx-auto px-5 py-24 text-center">
       <p className="text-sm text-gray-400 mb-4">活动不存在或已删除</p>
       <Link to="/" className="text-sm text-gray-950 hover:underline">← 返回</Link>
     </div>
   )
 
+  /* ── Derived state (only runs when event is ready) ───────────── */
+
   const totalBooked = registrations
     .filter(r => r.payment_status !== 'rejected' && r.payment_status !== 'waitlisted')
     .reduce((sum, r) => sum + (r.quantity || 1), 0)
-  const spotsLeft = event.max_participants - totalBooked
-  const isFull = spotsLeft <= 0
+  const spotsLeft   = event.max_participants - totalBooked
+  const isFull      = spotsLeft <= 0
   const isWaitlisted = isFull && event.status === 'active'
 
   function handleChange(e) {

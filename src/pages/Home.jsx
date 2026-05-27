@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import EventCard from '../components/event/EventCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { getEvents, getRegistrationCount } from '../services/dataService'
@@ -7,25 +7,34 @@ export default function Home() {
   const [events, setEvents] = useState([])
   const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
+  const [error, setError]   = useState('')
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true)
-      const { data } = await getEvents()
-      if (data) {
-        setEvents(data)
-        const entries = await Promise.all(
-          data.map(async e => {
-            const { count } = await getRegistrationCount(e.id)
-            return [e.id, count || 0]
-          })
-        )
-        setCounts(Object.fromEntries(entries))
-      }
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError('')
+
+    const { data, error: fetchErr } = await getEvents()
+
+    if (fetchErr || !data) {
+      setError('活动加载失败，请刷新重试')
       setLoading(false)
+      return
     }
-    load()
+
+    setEvents(data)
+
+    // Fetch registration counts in parallel
+    const entries = await Promise.all(
+      data.map(async e => {
+        const { count } = await getRegistrationCount(e.id)
+        return [e.id, count || 0]
+      })
+    )
+    setCounts(Object.fromEntries(entries))
+    setLoading(false)
   }, [])
+
+  useEffect(() => { load() }, [load])
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-5 py-7 sm:py-12">
@@ -35,7 +44,21 @@ export default function Home() {
       </div>
 
       {loading ? (
-        <div className="py-16"><LoadingSpinner /></div>
+        /* 居中加载视图，min-h 保证首屏不塌陷 */
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <LoadingSpinner text="正在加载活动..." />
+        </div>
+      ) : error ? (
+        /* 错误提示 + 重试入口，永远不会死锁转圈 */
+        <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4">
+          <p className="text-sm text-red-400">{error}</p>
+          <button
+            onClick={load}
+            className="text-xs text-gray-500 hover:text-gray-950 underline underline-offset-2 transition-colors"
+          >
+            点击重试
+          </button>
+        </div>
       ) : events.length === 0 ? (
         <div className="text-center py-24">
           <p className="text-sm text-gray-400">暂无活动，请稍后再来</p>
