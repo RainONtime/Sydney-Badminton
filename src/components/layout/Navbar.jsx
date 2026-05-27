@@ -43,7 +43,7 @@ export default function Navbar() {
         {/* Brand mark */}
         <Link to="/" className="flex items-center gap-2.5 select-none">
           <img src="/logo.png" alt="Duoduo Badminton" className="w-9 h-9 shrink-0 transition-transform duration-300 hover:scale-110" />
-          <div className="leading-none">
+          <div className="hidden sm:block leading-none">
             <p className="leading-none" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.01em', color: '#4B4552' }}>
               DUODUO
             </p>
@@ -54,12 +54,12 @@ export default function Navbar() {
         </Link>
 
         {/* Nav actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1">
 
           {/* Language toggle */}
           <button
             onClick={toggleLang}
-            className="btn-ghost flex items-center gap-1 text-xs px-2.5"
+            className="btn-ghost flex items-center gap-1 text-xs px-2 sm:px-2.5"
             title={i18n.language === 'zh' ? 'Switch to English' : '切换中文'}
           >
             <Globe size={12} className="shrink-0" strokeWidth={2.5} />
@@ -72,24 +72,24 @@ export default function Navbar() {
             <>
               <Link
                 to="/admin"
-                className={`btn-ghost text-xs px-3 ${location.pathname === '/admin' ? 'text-violet-500' : ''}`}
+                className={`btn-ghost text-xs px-2 sm:px-3 ${location.pathname === '/admin' ? 'text-violet-500' : ''}`}
               >
                 {t('nav.adminEvents')}
               </Link>
               {isSuper && (
                 <Link
                   to="/admin/organizers"
-                  className={`btn-ghost text-xs px-3 ${location.pathname === '/admin/organizers' ? 'text-violet-500' : ''}`}
+                  className={`btn-ghost text-xs px-2 sm:px-3 ${location.pathname === '/admin/organizers' ? 'text-violet-500' : ''}`}
                 >
                   {t('nav.organizers')}
                 </Link>
               )}
-              <button onClick={handleLogout} className="btn-ghost text-xs px-3">
+              <button onClick={handleLogout} className="btn-ghost text-xs px-2 sm:px-3">
                 {t('nav.logout')}
               </button>
             </>
           ) : (
-            <Link to="/admin" className="btn-ghost text-xs px-3">
+            <Link to="/admin" className="btn-ghost text-xs px-2 sm:px-3">
               {t('nav.adminLogin')}
             </Link>
           )}

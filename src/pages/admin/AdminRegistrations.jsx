@@ -181,8 +181,8 @@ export default function AdminRegistrations() {
           <p className="text-sm text-gray-400">{t('admin.registrations.empty')}</p>
         </div>
       ) : (
-        <div className="card overflow-hidden">
-          <table className="w-full">
+        <div className="card overflow-x-auto pb-1">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 w-8">{t('admin.registrations.columns.index')}</th>
