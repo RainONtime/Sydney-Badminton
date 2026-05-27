@@ -12,7 +12,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import QRUpload from '../../components/admin/QRUpload'
 
 const EMPTY_FORM = {
-  title: '', description: '', date: '', start_time: '', end_time: '',
+  title: '', title_en: '', description: '', description_en: '', date: '', start_time: '', end_time: '',
   location: '', max_participants: 20, price: 0, status: 'active',
   organizer_id: '',
   organizer: '',
@@ -163,6 +163,21 @@ export default function AdminEventForm() {
           <input className="input-field" name="title" value={form.title} onChange={handleChange} placeholder="例：周六混双友谊赛" />
         </div>
 
+        {/* Title (English) */}
+        <div>
+          <label className="block text-xs text-gray-400 mb-1.5">
+            Activity Title (English) <span className="text-gray-300">— optional</span>
+          </label>
+          <input
+            className="input-field"
+            name="title_en"
+            value={form.title_en || ''}
+            onChange={handleChange}
+            placeholder="e.g. Saturday Mixed Doubles"
+          />
+          <p className="text-[11px] text-gray-300 mt-1.5">切换英文界面时展示，留空则自动显示中文标题</p>
+        </div>
+
         {/* Organizer section */}
         {isOrg ? (
           <div className="grid grid-cols-2 gap-4">
@@ -197,6 +212,22 @@ export default function AdminEventForm() {
         <div>
           <label className="block text-xs text-gray-400 mb-1.5">活动描述</label>
           <textarea className="input-field resize-none" name="description" value={form.description} onChange={handleChange} rows={3} placeholder="活动详情、注意事项等（选填）" />
+        </div>
+
+        {/* Description (English) */}
+        <div>
+          <label className="block text-xs text-gray-400 mb-1.5">
+            Description (English) <span className="text-gray-300">— optional</span>
+          </label>
+          <textarea
+            className="input-field resize-none"
+            name="description_en"
+            value={form.description_en || ''}
+            onChange={handleChange}
+            rows={3}
+            placeholder="Event details in English (optional)"
+          />
+          <p className="text-[11px] text-gray-300 mt-1.5">切换英文界面时展示，留空则自动显示中文描述</p>
         </div>
 
         {/* Date / Time */}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Trash2, Download, X, Check, Pencil, Eye } from 'lucide-react'
 import { getEventById, getAdminRegistrationsByEvent, deleteRegistration, updateRegistrationStatus, updateRegistrationQuantity, promoteWaitlistedRegistration } from '../../services/dataService'
@@ -8,11 +9,10 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import StatusBadge from '../../components/ui/StatusBadge'
 import RegistrationDetailsModal from '../../components/admin/RegistrationDetailsModal'
 
-const GENDER_LABEL = { male: '男', female: '女', other: '其他' }
-
 export default function AdminRegistrations() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t, i18n } = useTranslation()
   const user = getAdminUser()
 
   const [event, setEvent] = useState(null)
@@ -31,7 +31,6 @@ export default function AdminRegistrations() {
         getAdminRegistrationsByEvent(id),
       ])
 
-      // Ownership check: organizers can only manage their own events
       if (ev && user?.role === 'organizer' && ev.organizer_id !== user.id) {
         navigate('/admin', { replace: true })
         return
@@ -52,7 +51,7 @@ export default function AdminRegistrations() {
   }
 
   async function handleReject(reg) {
-    if (!confirm(`驳回 ${reg.name} 的报名？`)) return
+    if (!confirm(t('admin.registrations.rejectConfirm', { name: reg.name }))) return
     setActing(reg.id)
     await deleteRegistration(reg.id)
     setRegistrations(r => r.filter(x => x.id !== reg.id))
@@ -66,7 +65,7 @@ export default function AdminRegistrations() {
 
   async function handleSaveQty(reg) {
     if (editQty < 1) {
-      alert('人数不能为 0，如需完全取消请使用驳回或删除功能。')
+      alert(t('admin.registrations.quantityZeroAlert'))
       return
     }
     if (editQty === (reg.quantity || 1)) { setEditingId(null); return }
@@ -78,7 +77,7 @@ export default function AdminRegistrations() {
   }
 
   async function handleDelete(reg) {
-    if (!confirm(`移除 ${reg.name} 的报名记录？`)) return
+    if (!confirm(t('admin.registrations.deleteConfirm', { name: reg.name }))) return
     setActing(reg.id)
     await deleteRegistration(reg.id)
     setRegistrations(r => r.filter(x => x.id !== reg.id))
@@ -92,7 +91,7 @@ export default function AdminRegistrations() {
     setActing(null)
     if (err) {
       if (err.message === 'NO_SPOTS_AVAILABLE') {
-        setPromoteError(`名额已满，无法将「${reg.name}」转为正式报名。请先释放名额。`)
+        setPromoteError(t('admin.registrations.noSpotsError', { name: reg.name }))
       } else {
         setPromoteError(err.message)
       }
@@ -102,13 +101,20 @@ export default function AdminRegistrations() {
   }
 
   function exportCSV() {
-    const header = ['#', '名字', '性别', '中羽等级', '人数', '付款状态', '备注', '报名时间']
+    const genderLabel = g => t(`admin.registrations.gender.${g}`) || g || ''
+    const statusLabel = s =>
+      s === 'confirmed' ? t('admin.registrations.confirmed')
+      : s === 'waitlisted' ? t('admin.registrations.waitlisted')
+      : t('admin.registrations.pending')
+
+    const header = ['#', t('admin.registrations.columns.name'), t('admin.registrations.columns.gender'),
+      'Level', t('admin.registrations.columns.quantity'), 'Status', t('admin.registrations.columns.notes'), 'Date']
     const rows = registrations.map((r, i) => [
       i + 1, r.name,
-      GENDER_LABEL[r.gender] || r.gender || '',
-      r.skill_level ? `${r.skill_level}级` : '',
+      genderLabel(r.gender),
+      r.skill_level ? `${r.skill_level}` : '',
       r.quantity || 1,
-      r.payment_status === 'confirmed' ? '已确认' : r.payment_status === 'waitlisted' ? '候补中' : '待确认',
+      statusLabel(r.payment_status),
       r.notes || '',
       format(parseISO(r.created_at), 'MM-dd HH:mm'),
     ])
@@ -117,7 +123,8 @@ export default function AdminRegistrations() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${event?.title || '报名'}_名单.csv`
+    const eventTitle = (i18n.language === 'en' && event?.title_en) ? event.title_en : (event?.title || 'registrations')
+    a.download = `${eventTitle}_registrations.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -128,31 +135,34 @@ export default function AdminRegistrations() {
   const pendingCount    = registrations.filter(r => r.payment_status === 'pending').reduce((s, r) => s + (r.quantity || 1), 0)
   const waitlistedCount = registrations.filter(r => r.payment_status === 'waitlisted').reduce((s, r) => s + (r.quantity || 1), 0)
 
+  const eventTitle = (i18n.language === 'en' && event?.title_en) ? event.title_en : event?.title
+
   return (
     <div className="max-w-4xl mx-auto px-5 py-12">
       {detailReg && <RegistrationDetailsModal registration={detailReg} onClose={() => setDetailReg(null)} />}
 
-      <Link to="/admin" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-950 mb-8 transition-colors">
-        <ArrowLeft size={13} /> 活动管理
+      <Link to="/admin" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-violet-400 mb-8 transition-colors">
+        <ArrowLeft size={13} /> {t('admin.registrations.backToEvents')}
       </Link>
 
       <div className="flex items-start justify-between gap-4 mb-10">
         <div>
-          <h1 className="text-xl font-semibold text-gray-950 tracking-tight">{event?.title}</h1>
+          <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#4B4552' }}>{eventTitle}</h1>
           <p className="text-sm text-gray-400 mt-0.5">
-            <span className="text-gray-950 font-medium">{confirmedCount}</span> 已确认
+            <span className="font-medium" style={{ color: '#4B4552' }}>{confirmedCount}</span>
+            {' '}{t('admin.registrations.confirmed')}
             {pendingCount > 0 && (
-              <> · <span className="text-amber-600 font-medium">{pendingCount}</span> 待确认</>
+              <> · <span className="text-amber-600 font-medium">{pendingCount}</span> {t('admin.registrations.pending')}</>
             )}
             {event && <span className="text-gray-300 ml-1">/ {event.max_participants}</span>}
             {waitlistedCount > 0 && (
-              <> · <span className="text-purple-500 font-medium">{waitlistedCount}</span> 候补</>
+              <> · <span className="text-purple-500 font-medium">{waitlistedCount}</span> {t('admin.registrations.waitlisted')}</>
             )}
           </p>
         </div>
         {registrations.length > 0 && (
           <button onClick={exportCSV} className="btn-secondary flex items-center gap-1.5 text-xs shrink-0">
-            <Download size={13} /> 导出 CSV
+            <Download size={13} /> {t('admin.registrations.exportCSV')}
           </button>
         )}
       </div>
@@ -168,21 +178,21 @@ export default function AdminRegistrations() {
 
       {registrations.length === 0 ? (
         <div className="text-center py-24">
-          <p className="text-sm text-gray-400">暂无报名</p>
+          <p className="text-sm text-gray-400">{t('admin.registrations.empty')}</p>
         </div>
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 w-8">#</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400">名字</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 hidden sm:table-cell">性别</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 hidden sm:table-cell">等级</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-400">人数</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">状态</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 hidden lg:table-cell">备注</th>
-                <th className="px-4 py-3 text-xs font-medium text-gray-400 text-right">操作</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 w-8">{t('admin.registrations.columns.index')}</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400">{t('admin.registrations.columns.name')}</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 hidden sm:table-cell">{t('admin.registrations.columns.gender')}</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 hidden sm:table-cell">{t('admin.registrations.columns.level')}</th>
+                <th className="text-center px-4 py-3 text-xs font-medium text-gray-400">{t('admin.registrations.columns.quantity')}</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">{t('admin.registrations.columns.status')}</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 hidden lg:table-cell">{t('admin.registrations.columns.notes')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-gray-400 text-right">{t('admin.registrations.columns.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -190,6 +200,7 @@ export default function AdminRegistrations() {
                 const isPending    = reg.payment_status === 'pending'
                 const isWaitlisted = reg.payment_status === 'waitlisted'
                 const isActing     = acting === reg.id
+                const genderKey    = ['male', 'female', 'other'].includes(reg.gender) ? reg.gender : null
                 return (
                   <tr
                     key={reg.id}
@@ -197,51 +208,50 @@ export default function AdminRegistrations() {
                   >
                     <td className="px-5 py-3.5 text-xs text-gray-300">{idx + 1}</td>
                     <td className="px-5 py-3.5">
-                      <span className="text-sm font-medium text-gray-950">{reg.name}</span>
+                      <span className="text-sm font-medium" style={{ color: '#4B4552' }}>{reg.name}</span>
                       {(reg.quantity || 1) > 1 && (
                         <span className="text-xs text-gray-400 ml-1">×{reg.quantity}</span>
                       )}
                     </td>
                     <td className="px-4 py-3.5 text-sm text-gray-500 hidden sm:table-cell">
-                      {GENDER_LABEL[reg.gender] || <span className="text-gray-300">—</span>}
+                      {genderKey ? t(`admin.registrations.gender.${genderKey}`) : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3.5 text-sm text-gray-500 hidden sm:table-cell">
                       {reg.skill_level ? `${reg.skill_level} 级` : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3.5 text-sm text-center">
                       {editingId === reg.id ? (
-                        // Inline quantity editor
                         <div className="flex items-center justify-center gap-1">
                           <select
                             value={editQty}
                             onChange={e => setEditQty(Number(e.target.value))}
                             autoFocus
-                            className="text-xs border border-gray-200 rounded-lg px-1.5 py-1 bg-white text-gray-950 focus:outline-none focus:border-gray-400"
+                            className="text-xs border border-gray-200 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:border-gray-400"
+                            style={{ color: '#4B4552' }}
                           >
                             {Array.from({ length: reg.quantity || 1 }, (_, i) => i + 1).map(n => (
-                              <option key={n} value={n}>{n} 人</option>
+                              <option key={n} value={n}>{n}</option>
                             ))}
                           </select>
                           <button
                             onClick={() => handleSaveQty(reg)}
                             disabled={isActing}
                             className="p-1 rounded text-green-600 hover:bg-green-50 transition-all disabled:opacity-30"
-                            title="保存"
+                            title={t('admin.registrations.actions.save')}
                           >
                             <Check size={12} />
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
                             className="p-1 rounded text-gray-400 hover:bg-gray-100 transition-all"
-                            title="取消"
+                            title={t('admin.registrations.actions.cancel')}
                           >
                             <X size={12} />
                           </button>
                         </div>
                       ) : (
-                        // Display with edit icon (only if quantity > 1)
                         <div className="flex items-center justify-center gap-1 group">
-                          <span className={(reg.quantity || 1) > 1 ? 'font-medium text-gray-950' : 'text-gray-400'}>
+                          <span className={(reg.quantity || 1) > 1 ? 'font-medium' : 'text-gray-400'} style={(reg.quantity || 1) > 1 ? { color: '#4B4552' } : {}}>
                             {reg.quantity || 1}
                           </span>
                           {(reg.quantity || 1) > 1 && (
@@ -249,7 +259,7 @@ export default function AdminRegistrations() {
                               onClick={() => startEditQty(reg)}
                               disabled={isActing}
                               className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-gray-300 hover:text-gray-600 transition-all disabled:opacity-30"
-                              title="修改人数"
+                              title={t('admin.registrations.actions.editQty')}
                             >
                               <Pencil size={10} />
                             </button>
@@ -265,11 +275,10 @@ export default function AdminRegistrations() {
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-1">
-                        {/* Always-visible details button */}
                         <button
                           onClick={() => setDetailReg(reg)}
-                          className="p-1.5 rounded-lg text-gray-300 hover:text-brand hover:bg-blue-50 transition-all"
-                          title="查看详情"
+                          className="p-1.5 rounded-lg text-gray-300 hover:text-violet-500 hover:bg-violet-50 transition-all"
+                          title={t('admin.registrations.actions.details')}
                         >
                           <Eye size={13} />
                         </button>
@@ -280,15 +289,15 @@ export default function AdminRegistrations() {
                               onClick={() => handlePromote(reg)}
                               disabled={isActing}
                               className="text-[10px] text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg px-2 py-1 transition-all disabled:opacity-30 whitespace-nowrap"
-                              title="转为正式报名"
+                              title={t('admin.registrations.actions.promote')}
                             >
-                              {isActing ? '处理中…' : '转为正式'}
+                              {isActing ? t('admin.registrations.actions.acting') : t('admin.registrations.actions.promoteShort')}
                             </button>
                             <button
                               onClick={() => handleDelete(reg)}
                               disabled={isActing}
                               className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30"
-                              title="移除候补"
+                              title={t('admin.registrations.actions.removeWaitlist')}
                             >
                               <Trash2 size={13} />
                             </button>
@@ -300,7 +309,7 @@ export default function AdminRegistrations() {
                               onClick={() => handleConfirm(reg)}
                               disabled={isActing}
                               className="p-1.5 rounded-lg text-gray-300 hover:text-green-600 hover:bg-green-50 transition-all disabled:opacity-30"
-                              title="确认报名"
+                              title={t('admin.registrations.actions.confirm')}
                             >
                               <Check size={14} />
                             </button>
@@ -308,7 +317,7 @@ export default function AdminRegistrations() {
                               onClick={() => handleReject(reg)}
                               disabled={isActing}
                               className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30"
-                              title="驳回报名"
+                              title={t('admin.registrations.actions.reject')}
                             >
                               <X size={14} />
                             </button>
@@ -319,7 +328,7 @@ export default function AdminRegistrations() {
                             onClick={() => handleDelete(reg)}
                             disabled={isActing}
                             className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30"
-                            title="删除记录"
+                            title={t('admin.registrations.actions.delete')}
                           >
                             <Trash2 size={13} />
                           </button>

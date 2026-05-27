@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Upload, X } from 'lucide-react'
 import BankInfo from './BankInfo'
 import CopyButton from '../ui/CopyButton'
@@ -10,6 +11,8 @@ import { compressImage } from '../../utils/imageUtils'
  * being stored as base64 data URLs.
  */
 export default function PaymentStep({ event, quantity, onSubmit, onBack, submitting }) {
+  const { t } = useTranslation()
+
   // ── Resolve payment methods ───────────────────────────────────────────────
   const paymentMethods = Array.isArray(event.payment_methods) && event.payment_methods.length > 0
     ? event.payment_methods
@@ -69,8 +72,8 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
       {isFree ? (
         <div className="bg-gray-50 rounded-2xl px-5 py-6 text-center">
           <p className="text-2xl mb-2">🎉</p>
-          <p className="text-sm text-gray-950 font-medium">本次活动免费</p>
-          <p className="text-sm text-gray-400 mt-1">无需付款，直接确认报名</p>
+          <p className="text-sm text-gray-950 font-medium">{t('payment.free')}</p>
+          <p className="text-sm text-gray-400 mt-1">{t('payment.freeNote')}</p>
         </div>
 
       /* ── Paid event ──────────────────────────────────────────────────── */
@@ -79,7 +82,7 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
           {/* Amount card */}
           <div className="bg-brand text-white rounded-2xl px-5 py-4 flex items-center justify-between">
             <div>
-              <p className="text-xs text-white/70 mb-0.5">应付金额</p>
+              <p className="text-xs text-white/70 mb-0.5">{t('payment.amountLabel')}</p>
               <p className="text-xl font-semibold">AUD$ {totalAmount}</p>
             </div>
             {quantity > 1 && (
@@ -90,7 +93,7 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
           {/* Payment method selector */}
           {hasMultiple && (
             <div>
-              <p className="text-xs text-gray-400 mb-3">选择支付方式</p>
+              <p className="text-xs text-gray-400 mb-3">{t('payment.chooseMethod')}</p>
               <div className="grid grid-cols-2 gap-2">
                 {paymentMethods.map(method => (
                   <button
@@ -103,7 +106,7 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
                         : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
                     }`}
                   >
-                    {method === 'wechat' ? '💚 微信扫码' : '🏦 银行转账'}
+                    {method === 'wechat' ? t('payment.wechatMethod') : t('payment.bankMethod')}
                   </button>
                 ))}
               </div>
@@ -113,18 +116,18 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
           {/* WeChat panel */}
           {showWechat && (
             <div className="space-y-4">
-              {!hasMultiple && <p className="text-xs text-gray-400">微信扫码付款</p>}
+              {!hasMultiple && <p className="text-xs text-gray-400">{t('payment.wechatTitle')}</p>}
 
               {event.wechat_note && (
                 <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 px-5 py-5">
                   <p className="text-[10px] text-amber-500 uppercase tracking-widest font-semibold text-center mb-3">
-                    ⚠️ 转账备注 / RMB 金额
+                    {t('payment.wechatNoteLabel')}
                   </p>
                   <p className="text-2xl font-bold text-amber-800 text-center break-all leading-snug">
                     {event.wechat_note}
                   </p>
                   <div className="flex items-center justify-center gap-2 mt-4">
-                    <span className="text-xs text-amber-600 font-medium">一键复制</span>
+                    <span className="text-xs text-amber-600 font-medium">{t('payment.copy')}</span>
                     <CopyButton text={event.wechat_note} />
                   </div>
                 </div>
@@ -140,8 +143,8 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
                 </div>
               ) : (
                 <div className="bg-gray-50 rounded-2xl p-6 text-center">
-                  <p className="text-sm text-gray-400">组织者尚未上传收款码</p>
-                  <p className="text-xs text-gray-300 mt-1">请联系组织者获取付款方式</p>
+                  <p className="text-sm text-gray-400">{t('payment.noQR')}</p>
+                  <p className="text-xs text-gray-300 mt-1">{t('payment.contactOrganizer')}</p>
                 </div>
               )}
             </div>
@@ -150,14 +153,14 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
           {/* Bank panel */}
           {showBank && (
             <div>
-              {!hasMultiple && <p className="text-xs text-gray-400 mb-3">银行转账 / PayID</p>}
+              {!hasMultiple && <p className="text-xs text-gray-400 mb-3">{t('payment.bankTitle')}</p>}
               <BankInfo event={event} />
             </div>
           )}
 
           {/* Screenshot upload */}
           <div>
-            <p className="text-xs text-gray-400 mb-3">上传付款截图</p>
+            <p className="text-xs text-gray-400 mb-3">{t('payment.uploadLabel')}</p>
             {preview ? (
               <div className="relative">
                 <img
@@ -189,13 +192,13 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
                 {compressing ? (
                   <>
                     <div className="w-5 h-5 mx-auto mb-2 rounded-full border-2 border-gray-200 border-t-brand animate-spin" />
-                    <p className="text-sm text-gray-400">正在压缩图片…</p>
+                    <p className="text-sm text-gray-400">{t('payment.compressing')}</p>
                   </>
                 ) : (
                   <>
                     <Upload size={20} className="mx-auto text-gray-300 mb-2" />
-                    <p className="text-sm text-gray-500">点击或拖拽上传截图</p>
-                    <p className="text-xs text-gray-300 mt-1">支持 JPG、PNG（自动压缩）</p>
+                    <p className="text-sm text-gray-500">{t('payment.uploadHint')}</p>
+                    <p className="text-xs text-gray-300 mt-1">{t('payment.uploadFormats')}</p>
                   </>
                 )}
               </div>
@@ -214,7 +217,7 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
       {/* Actions */}
       <div className="flex gap-3">
         <button onClick={onBack} disabled={isProcessing} className="btn-secondary px-5 py-3 disabled:opacity-40">
-          上一步
+          {t('common.back')}
         </button>
         <button
           onClick={() => onSubmit(screenshot)}
@@ -224,7 +227,11 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
           {submitting && (
             <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
           )}
-          {submitting ? '提交中…' : isFree ? '确认报名' : '提交审核'}
+          {submitting
+            ? t('common.submitting')
+            : isFree
+              ? t('form.confirm')
+              : t('payment.submitForReview')}
         </button>
       </div>
     </div>

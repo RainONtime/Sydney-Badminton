@@ -1,0 +1,212 @@
+{
+  "common": {
+    "retry": "点击重试",
+    "free": "免费",
+    "perPerson": "/ 人",
+    "submitting": "提交中…",
+    "back": "返回"
+  },
+  "nav": {
+    "events": "活动",
+    "adminEvents": "活动管理",
+    "organizers": "组织者",
+    "logout": "退出",
+    "adminLogin": "组织者登录"
+  },
+  "home": {
+    "title": "活动",
+    "subtitle": "选择场次，填写报名信息",
+    "loading": "正在加载活动...",
+    "loadError": "活动加载失败，请刷新重试",
+    "empty": "暂无活动，请稍后再来"
+  },
+  "event": {
+    "full": "名额已满",
+    "spotsLeft_one": "还剩 {{count}} 个",
+    "spotsLeft_other": "还剩 {{count}} 个",
+    "spotsLeftShort_one": "剩余 {{count}} 个",
+    "spotsLeftShort_other": "剩余 {{count}} 个",
+    "timeLabel": "时间",
+    "locationLabel": "地点",
+    "priceLabel": "费用",
+    "spotsLabel": "名额",
+    "organizer": "组织者",
+    "wechat": "微信",
+    "cancelNote": "如需取消报名或修改人数，请添加组织者微信联系退款。",
+    "allEvents": "所有活动",
+    "participantList": "报名名单",
+    "paymentStep": "付款",
+    "loadError": "加载失败，请刷新重试",
+    "notFound": "活动不存在或已删除",
+    "backToHome": "← 返回首页",
+    "backToAll": "← 返回"
+  },
+  "form": {
+    "title": "报名",
+    "name": "名字",
+    "namePlaceholder": "微信名或群昵称",
+    "gender": "性别",
+    "male": "男",
+    "female": "女",
+    "other": "沃尔玛塑料袋",
+    "levelLabel": "中羽等级（选填）",
+    "levelNone": "不填",
+    "level": "{{n}} 级",
+    "quantityLabel": "人数（最多 3 人）",
+    "notesLabel": "备注（选填）",
+    "notesPlaceholder": "如有特殊需求可在此说明",
+    "joinWaitlist": "名额已满，加入候补",
+    "nextPayment": "下一步：付款",
+    "confirm": "确认报名",
+    "errorName": "请填写名字",
+    "errorGender": "请选择性别",
+    "errorSpots_one": "剩余名额不足，当前仅剩 {{count}} 个",
+    "errorSpots_other": "剩余名额不足，当前仅剩 {{count}} 个",
+    "errorSubmit": "提交失败，请稍后重试"
+  },
+  "success": {
+    "waitlistTitle": "已加入候补名单",
+    "waitlistBody": "{{name}}，当前名额已满，你已排入候补队列。若有人退出，组织者会将你转为正式报名并通知你。",
+    "backToEvent": "返回活动页",
+    "confirmedTitle": "报名成功！",
+    "pendingTitle": "已提交，等待确认",
+    "confirmedBody": "{{name}}，你已完成报名，请按时到场。",
+    "pendingBody": "组织者确认付款后，你的报名将正式生效。",
+    "registerAgain": "再报一次"
+  },
+  "participants": {
+    "empty": "暂无报名",
+    "confirmed": "{{count}} 人已确认",
+    "male": "男",
+    "female": "女",
+    "pending": "待确认",
+    "waitlist_one": "另有 {{count}} 人在候补中",
+    "waitlist_other": "另有 {{count}} 人在候补中"
+  },
+  "admin": {
+    "roles": {
+      "super": "超管",
+      "organizer": "组织者"
+    },
+    "events": {
+      "title": "活动管理",
+      "totalCount": "全站 {{count}} 个活动",
+      "myCount": "{{count}} 个活动",
+      "activeQuota": "进行中 {{active}}/3",
+      "quotaReached": "（已达上限）",
+      "logoutTitle": "退出登录",
+      "createButton": "新建活动",
+      "quotaTitle": "已达同时发布 3 个活动的上限",
+      "quotaWarning": "已达同时发布 3 个进行中活动的上限。请将已有活动状态改为「已结束」或「已取消」后，再创建新活动。",
+      "empty": "还没有活动",
+      "createFirst": "创建第一个活动",
+      "deleteConfirm": "删除这个活动？相关报名记录也会一并删除。",
+      "columns": {
+        "name": "活动名称",
+        "organizer": "组织者",
+        "date": "日期",
+        "registrations": "报名人数",
+        "status": "状态"
+      },
+      "status": {
+        "active": "报名中",
+        "completed": "已结束",
+        "cancelled": "已取消"
+      },
+      "actions": {
+        "registrations": "报名名单",
+        "edit": "编辑",
+        "delete": "删除"
+      }
+    },
+    "registrations": {
+      "backToEvents": "活动管理",
+      "confirmed": "已确认",
+      "pending": "待确认",
+      "waitlisted": "候补",
+      "exportCSV": "导出 CSV",
+      "empty": "暂无报名",
+      "deleteConfirm": "移除 {{name}} 的报名记录？",
+      "rejectConfirm": "驳回 {{name}} 的报名？",
+      "quantityZeroAlert": "人数不能为 0，如需完全取消请使用驳回或删除功能。",
+      "noSpotsError": "名额已满，无法将「{{name}}」转为正式报名。请先释放名额。",
+      "columns": {
+        "index": "#",
+        "name": "名字",
+        "gender": "性别",
+        "level": "等级",
+        "quantity": "人数",
+        "status": "状态",
+        "notes": "备注",
+        "actions": "操作"
+      },
+      "actions": {
+        "details": "查看详情",
+        "confirm": "确认报名",
+        "reject": "驳回报名",
+        "promote": "转为正式报名",
+        "promoteShort": "转为正式",
+        "acting": "处理中…",
+        "removeWaitlist": "移除候补",
+        "delete": "删除记录",
+        "save": "保存",
+        "cancel": "取消",
+        "editQty": "修改人数"
+      },
+      "gender": {
+        "male": "男",
+        "female": "女",
+        "other": "其他"
+      }
+    },
+    "organizers": {
+      "pageTitle": "组织者管理",
+      "backToEvents": "活动管理",
+      "count": "{{count}} 个组织者账号",
+      "addButton": "添加组织者",
+      "addTitle": "添加新组织者",
+      "nameLabel": "名字",
+      "namePlaceholder": "组织者昵称",
+      "passwordLabel": "登录密码",
+      "passwordPlaceholder": "设置密码（须唯一）",
+      "saving": "保存中…",
+      "save": "保存",
+      "cancel": "取消",
+      "empty": "还没有组织者账号",
+      "colIndex": "#",
+      "colName": "名字",
+      "colPassword": "登录密码",
+      "colActions": "操作",
+      "newPasswordPlaceholder": "新密码",
+      "deleteConfirm": "删除组织者「{{name}}」？此操作无法撤回。",
+      "deleteHasEvents": "无法删除「{{name}}」：该账号下还有 {{count}} 个进行中的活动。请先将相关活动改为「已结束」或「已取消」，再执行删除。",
+      "errorName": "请填写名字",
+      "errorPassword": "请填写密码",
+      "hidePassword": "隐藏",
+      "showPassword": "显示密码",
+      "editPasswordTitle": "修改密码",
+      "deleteTitle": "删除组织者",
+      "passwordNote": "每个密码须唯一（Mock 模式通过密码区分账号）。接入 Supabase Auth 后将改为邮箱 + 密码登录。"
+    }
+  },
+  "payment": {
+    "free": "本次活动免费",
+    "freeNote": "无需付款，直接确认报名",
+    "amountLabel": "应付金额",
+    "chooseMethod": "选择支付方式",
+    "wechatMethod": "💚 微信扫码",
+    "bankMethod": "🏦 银行转账",
+    "wechatTitle": "微信扫码付款",
+    "wechatNoteLabel": "⚠️ 转账备注 / RMB 金额",
+    "copy": "一键复制",
+    "noQR": "组织者尚未上传收款码",
+    "contactOrganizer": "请联系组织者获取付款方式",
+    "noBankInfo": "请联系组织者获取付款信息",
+    "bankTitle": "银行转账 / PayID",
+    "uploadLabel": "上传付款截图",
+    "compressing": "正在压缩图片…",
+    "uploadHint": "点击或拖拽上传截图",
+    "uploadFormats": "支持 JPG、PNG（自动压缩）",
+    "submitForReview": "提交审核"
+  }
+}

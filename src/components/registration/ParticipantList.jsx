@@ -1,23 +1,22 @@
 import { ShoppingBag } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const GENDER_ICON = {
-  male:   { icon: '♂', label: '男',  color: 'text-blue-500'   },
-  female: { icon: '♀', label: '女',  color: 'text-pink-500'   },
-  other:  { icon: null, label: '其他', color: 'text-purple-500' },
+  male:   { icon: '♂', color: 'text-indigo-300'  },
+  female: { icon: '♀', color: 'text-rose-300'    },
+  other:  { icon: null, color: 'text-violet-400'  },
 }
 
-// 固定高度容器锁死对齐：h-6 绝对高度 + items-center 强制 SVG 与文字共线，
-// 无需任何 translate-y 光学修正。
 function GenderIcon({ gender, size = 'sm' }) {
   const g = GENDER_ICON[gender] || GENDER_ICON.male
-  const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'   // 14px / 16px
+  const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'
 
   return (
     <span className={`inline-flex items-center justify-center h-6 shrink-0 ${g.color}`}>
       {g.icon ? (
         <span className="text-sm leading-none select-none">{g.icon}</span>
       ) : (
-        <ShoppingBag className={`${iconSize} shrink-0`} />
+        <ShoppingBag className={`${iconSize} shrink-0`} strokeWidth={2.5} />
       )}
     </span>
   )
@@ -26,7 +25,7 @@ function GenderIcon({ gender, size = 'sm' }) {
 function levelBadge(level) {
   if (!level) return null
   return (
-    <span className="inline-block text-[10px] text-gray-400 border border-gray-200 rounded px-1.5 py-0.5 leading-none">
+    <span className="inline-block text-[10px] font-medium text-violet-500 bg-violet-50 rounded-full px-2 py-0.5 leading-none">
       {level} 级
     </span>
   )
@@ -34,6 +33,8 @@ function levelBadge(level) {
 
 /** @param {{ registrations: import('../../types').Registration[] }} props */
 export default function ParticipantList({ registrations }) {
+  const { t } = useTranslation()
+
   const active     = registrations.filter(r => r.payment_status !== 'rejected' && r.payment_status !== 'waitlisted')
   const waitlisted = registrations.filter(r => r.payment_status === 'waitlisted')
   const confirmed  = active.filter(r => r.payment_status === 'confirmed')
@@ -49,7 +50,7 @@ export default function ParticipantList({ registrations }) {
   if (active.length === 0 && waitlisted.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-400">暂无报名</p>
+        <p className="text-sm text-gray-400">{t('participants.empty')}</p>
       </div>
     )
   }
@@ -60,32 +61,32 @@ export default function ParticipantList({ registrations }) {
         <>
           {/* ── 统计汇总区 ────────────────────────────────────────── */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-5 text-sm">
-            <span className="font-medium text-gray-950 leading-none">
-              {totalConfirmed} 人已确认
+            <span className="font-bold leading-none" style={{ color: '#4B4552' }}>
+              {t('participants.confirmed', { count: totalConfirmed })}
             </span>
 
             {maleCount > 0 && (
-              <span className="inline-flex items-center h-6 gap-1.5 text-blue-500">
+              <span className="inline-flex items-center h-6 gap-1.5 text-indigo-300">
                 <GenderIcon gender="male" size="sm" />
-                <span className="leading-none">{maleCount} 男</span>
+                <span className="leading-none">{maleCount} {t('participants.male')}</span>
               </span>
             )}
             {femaleCount > 0 && (
-              <span className="inline-flex items-center h-6 gap-1.5 text-pink-500">
+              <span className="inline-flex items-center h-6 gap-1.5 text-rose-300">
                 <GenderIcon gender="female" size="sm" />
-                <span className="leading-none">{femaleCount} 女</span>
+                <span className="leading-none">{femaleCount} {t('participants.female')}</span>
               </span>
             )}
             {otherCount > 0 && (
-              <span className="inline-flex items-center h-6 gap-1.5 text-purple-500">
+              <span className="inline-flex items-center h-6 gap-1.5 text-violet-400">
                 <GenderIcon gender="other" size="sm" />
                 <span className="leading-none">{otherCount}</span>
               </span>
             )}
 
             {totalPending > 0 && (
-              <span className="leading-none text-amber-500 text-xs">
-                {totalPending} 待确认
+              <span className="leading-none text-amber-400 text-xs font-medium">
+                {totalPending} {t('participants.pending')}
               </span>
             )}
           </div>
@@ -97,15 +98,17 @@ export default function ParticipantList({ registrations }) {
               return (
                 <div
                   key={reg.id}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm ${
-                    isPending ? 'bg-amber-50 border border-amber-100' : 'bg-gray-50'
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm transition-colors ${
+                    isPending
+                      ? 'bg-candy-yellow/10 border border-candy-yellow/40'
+                      : 'bg-violet-50/40'
                   }`}
                 >
                   <div className="flex items-center h-6 gap-1.5 flex-1 min-w-0">
                     <GenderIcon gender={reg.gender} size="md" />
                     <span className={`font-medium leading-none truncate ${
-                      isPending ? 'text-gray-600' : 'text-gray-950'
-                    }`}>
+                      isPending ? 'text-gray-400' : ''
+                    }`} style={!isPending ? { color: '#4B4552' } : {}}>
                       {reg.name}
                     </span>
                     {reg.quantity > 1 && (
@@ -118,8 +121,8 @@ export default function ParticipantList({ registrations }) {
                   {levelBadge(reg.skill_level)}
 
                   {isPending && (
-                    <span className="text-[10px] text-amber-600 font-medium shrink-0 leading-none">
-                      待确认
+                    <span className="text-[10px] text-amber-400 font-bold shrink-0 leading-none">
+                      {t('participants.pending')}
                     </span>
                   )}
                 </div>
@@ -130,8 +133,8 @@ export default function ParticipantList({ registrations }) {
       )}
 
       {totalWaitlist > 0 && (
-        <p className="text-xs text-purple-500 mt-4 text-center">
-          另有 {totalWaitlist} 人在候补中
+        <p className="text-xs text-violet-400 font-medium mt-4 text-center">
+          {t('participants.waitlist', { count: totalWaitlist })}
         </p>
       )}
     </div>

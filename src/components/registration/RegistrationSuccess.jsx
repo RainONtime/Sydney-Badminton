@@ -1,4 +1,5 @@
 import { Check, Clock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Step 3: confirmation message after registration is submitted.
@@ -10,6 +11,7 @@ import { Check, Clock } from 'lucide-react'
  * }} props
  */
 export default function RegistrationSuccess({ event, name, onReset, isWaitlisted = false }) {
+  const { t } = useTranslation()
   const isFree = event.price === 0 || !event.payment_methods?.length
 
   if (isWaitlisted) {
@@ -20,15 +22,15 @@ export default function RegistrationSuccess({ event, name, onReset, isWaitlisted
             <Clock size={14} className="text-purple-600" />
           </div>
           <div>
-            <p className="font-semibold text-gray-950">已加入候补名单</p>
+            <p className="font-semibold text-gray-950">{t('success.waitlistTitle')}</p>
             <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-              {name}，当前名额已满，你已排入候补队列。若有人退出，组织者会将你转为正式报名并通知你。
+              {t('success.waitlistBody', { name })}
             </p>
             <button
               onClick={onReset}
               className="text-xs text-gray-400 hover:text-gray-950 mt-4 underline underline-offset-2 transition-colors"
             >
-              返回活动页
+              {t('success.backToEvent')}
             </button>
           </div>
         </div>
@@ -44,18 +46,18 @@ export default function RegistrationSuccess({ event, name, onReset, isWaitlisted
         </div>
         <div>
           <p className="font-semibold text-gray-950">
-            {isFree ? '报名成功！' : '已提交，等待确认'}
+            {isFree ? t('success.confirmedTitle') : t('success.pendingTitle')}
           </p>
           <p className="text-sm text-gray-500 mt-1 leading-relaxed">
             {isFree
-              ? `${name}，你已完成报名，请按时到场。`
-              : `组织者确认付款后，你的报名将正式生效。`}
+              ? t('success.confirmedBody', { name })
+              : t('success.pendingBody')}
           </p>
           <button
             onClick={onReset}
             className="text-xs text-gray-400 hover:text-gray-950 mt-4 underline underline-offset-2 transition-colors"
           >
-            再报一次
+            {t('success.registerAgain')}
           </button>
         </div>
       </div>

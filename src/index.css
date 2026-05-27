@@ -10,13 +10,14 @@
   }
 
   body {
-    @apply text-gray-950 antialiased;
+    color: #4B4552;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
                  "PingFang SC", "Helvetica Neue", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
-    background-color: #f5f5f7;
+    background: linear-gradient(135deg, #FFF6F6 0%, #FDF4F8 50%, #F4F6FF 100%);
+    background-attachment: fixed;
     overscroll-behavior-y: none;
   }
 
@@ -30,56 +31,89 @@
 
   /* ── Buttons ─────────────────────────────────────────── */
   .btn-primary {
-    @apply inline-flex items-center justify-center text-white px-5 py-3
-           rounded-[12px] text-[15px] font-semibold
-           active:scale-[0.97] transition-all duration-150
+    @apply inline-flex items-center justify-center text-white px-6 py-3
+           rounded-full text-[15px] font-bold tracking-wide
+           transition-all duration-300 ease-out
            disabled:opacity-40 disabled:cursor-not-allowed
            touch-manipulation select-none;
-    background-color: #1a3255;
+    background: linear-gradient(to right, #A88BFA, #F472B6);
     min-height: 44px;
   }
-  .btn-primary:hover:not(:disabled) { background-color: #26456e; }
-  .btn-primary:active:not(:disabled) { background-color: #142847; }
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 28px rgba(168, 139, 250, 0.4);
+    filter: brightness(1.05);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: scale(0.96);
+    filter: brightness(0.97);
+    box-shadow: none;
+  }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center bg-white text-gray-950 px-5 py-3
-           rounded-[12px] text-[15px] font-medium
-           border border-gray-200 hover:bg-gray-50 active:bg-gray-100 active:scale-[0.97]
-           transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed
+    @apply inline-flex items-center justify-center bg-white px-6 py-3
+           rounded-full text-[15px] font-medium
+           border border-violet-100
+           transition-all duration-300 ease-out
+           disabled:opacity-40 disabled:cursor-not-allowed
            touch-manipulation select-none;
+    color: #4B4552;
     min-height: 44px;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: #F5F3FF;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(168, 139, 250, 0.12);
+  }
+  .btn-secondary:active:not(:disabled) {
+    transform: scale(0.96);
+    background-color: #EDE9FE;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center text-gray-500 px-3 py-2
-           rounded-[10px] text-sm font-medium
-           hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200
-           transition-all duration-150 touch-manipulation select-none;
+    @apply inline-flex items-center justify-center px-3 py-2
+           rounded-2xl text-sm font-medium
+           transition-all duration-200 touch-manipulation select-none;
+    color: #9CA3AF;
     min-height: 36px;
+  }
+  .btn-ghost:hover {
+    background-color: rgba(168, 139, 250, 0.08);
+    color: #A88BFA;
+  }
+  .btn-ghost:active {
+    background-color: rgba(168, 139, 250, 0.14);
+    transform: scale(0.96);
   }
 
   /* ── Inputs ───────────────────────────────────────────── */
   .input-field {
-    @apply w-full bg-white border border-gray-200 rounded-[12px] px-4 py-3
-           text-[16px] text-gray-950 placeholder:text-gray-300
-           transition-all duration-150;
+    @apply w-full border rounded-2xl px-4 py-3
+           text-[16px] placeholder:text-gray-300
+           transition-all duration-200;
+    color: #4B4552;
+    background-color: rgba(250, 248, 255, 0.85);
+    border-color: #EDE9FE;
     min-height: 48px;
     outline: none;
   }
   .input-field:focus {
-    border-color: rgba(26, 50, 85, 0.45);
-    box-shadow: 0 0 0 3px rgba(26, 50, 85, 0.07);
+    background-color: #ffffff;
+    border-color: rgba(168, 139, 250, 0.6);
+    box-shadow: 0 0 0 3px rgba(168, 139, 250, 0.1);
   }
 
   /* ── Card ─────────────────────────────────────────────── */
   .card {
-    @apply bg-white rounded-[16px];
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    @apply bg-white rounded-[2rem] overflow-hidden transition-all duration-300;
+    border: 1px solid rgba(249, 168, 212, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.03);
+  }
+  .card:hover {
+    transform: translateY(-5px);
     box-shadow:
-      0 1px 0 0 rgba(255, 255, 255, 0.85) inset,
-      0 1px 2px rgba(0, 0, 0, 0.04),
-      0 4px 12px rgba(0, 0, 0, 0.05),
-      0 12px 24px rgba(0, 0, 0, 0.03);
+      0 12px 40px rgba(168, 139, 250, 0.12),
+      0 4px 16px rgba(244, 114, 182, 0.08);
   }
 
 }

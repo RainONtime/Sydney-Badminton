@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import CopyButton from '../ui/CopyButton'
 
 /** @param {{ event: import('../../types').BadmintonEvent }} props */
 export default function BankInfo({ event }) {
+  const { t } = useTranslation()
   const rows = [
     event.payid        && { label: 'PayID',        value: event.payid },
     event.account_name && { label: 'Account Name', value: event.account_name },
@@ -10,7 +12,7 @@ export default function BankInfo({ event }) {
   ].filter(Boolean)
 
   if (rows.length === 0) {
-    return <p className="text-sm text-gray-400">请联系组织者获取付款信息</p>
+    return <p className="text-sm text-gray-400">{t('payment.noBankInfo')}</p>
   }
 
   return (

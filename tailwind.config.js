@@ -11,14 +11,31 @@ export default {
       },
       colors: {
         brand: {
-          DEFAULT: '#1a3255',
-          light:   '#26456e',
-          faint:   '#eef2f8',
+          DEFAULT: '#A88BFA',  // Violet-400 — used for spinner / focus rings
+          light:   '#C4B5FD',
+          dark:    '#8B5CF6',
+          faint:   '#F5F3FF',
+        },
+        mochi: {
+          text:  '#4B4552',   // warm gray-purple body text
+          cream: '#FCFAFA',   // warm off-white background
+        },
+        candy: {
+          pink:   '#f9a8d4',
+          yellow: '#fde047',
+          mint:   '#86efac',
+          purple: '#d8b4fe',
+          peach:  '#fca5a5',
+          blue:   '#93c5fd',
         },
       },
       borderRadius: {
-        card: '16px',
-        btn:  '12px',
+        card: '2rem',
+        btn:  '9999px',
+      },
+      boxShadow: {
+        kawaii: '0 8px 30px rgba(0,0,0,0.03)',
+        mochi:  '0 8px 30px rgba(168,139,250,0.10), 0 2px 8px rgba(244,114,182,0.06)',
       },
     },
   },

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Pencil, Trash2, Plus, Check, X, Eye, EyeOff } from 'lucide-react'
 import {
   getOrganizers,
@@ -12,9 +13,9 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function AdminOrganizers() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const user = getAdminUser()
 
-  // Guard: only super admin may access this page
   useEffect(() => {
     if (user?.role !== 'super') navigate('/admin', { replace: true })
   }, [])
@@ -22,23 +23,16 @@ export default function AdminOrganizers() {
   const [organizers, setOrganizers] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // "Add organizer" inline form
   const [adding, setAdding] = useState(false)
   const [newForm, setNewForm] = useState({ name: '', password: '' })
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Inline password editor
   const [editingId, setEditingId] = useState(null)
   const [editPassword, setEditPassword] = useState('')
 
-  // Per-row loading state
   const [actingId, setActingId] = useState(null)
-
-  // Toggle password visibility per row
   const [showPwd, setShowPwd] = useState({})
-
-  // Global error banner (for delete failures, password save failures)
   const [bannerError, setBannerError] = useState('')
 
   useEffect(() => {
@@ -48,12 +42,10 @@ export default function AdminOrganizers() {
     })
   }, [])
 
-  // ── Add ──────────────────────────────────────────────────────────────────
-
   async function handleAdd() {
     setFormError('')
-    if (!newForm.name.trim()) { setFormError('请填写名字'); return }
-    if (!newForm.password.trim()) { setFormError('请填写密码'); return }
+    if (!newForm.name.trim()) { setFormError(t('admin.organizers.errorName')); return }
+    if (!newForm.password.trim()) { setFormError(t('admin.organizers.errorPassword')); return }
     setSaving(true)
     const { data, error } = await addOrganizer(newForm)
     setSaving(false)
@@ -63,20 +55,15 @@ export default function AdminOrganizers() {
     setAdding(false)
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────────
-
   async function handleDelete(org) {
-    if (!confirm(`删除组织者「${org.name}」？此操作无法撤回。`)) return
+    if (!confirm(t('admin.organizers.deleteConfirm', { name: org.name }))) return
     setBannerError('')
     setActingId(org.id)
     const { error } = await deleteOrganizer(org.id)
     setActingId(null)
     if (error) {
       if (error.message === 'HAS_ACTIVE_EVENTS') {
-        setBannerError(
-          `无法删除「${org.name}」：该账号下还有 ${error.count} 个进行中的活动。` +
-          `请先将相关活动改为「已结束」或「已取消」，再执行删除。`
-        )
+        setBannerError(t('admin.organizers.deleteHasEvents', { name: org.name, count: error.count }))
       } else {
         setBannerError(error.message)
       }
@@ -84,8 +71,6 @@ export default function AdminOrganizers() {
     }
     setOrganizers(prev => prev.filter(o => o.id !== org.id))
   }
-
-  // ── Edit password ─────────────────────────────────────────────────────────
 
   function startEditPassword(org) {
     setEditingId(org.id)
@@ -119,27 +104,29 @@ export default function AdminOrganizers() {
 
   return (
     <div className="max-w-2xl mx-auto px-5 py-12">
-      <Link to="/admin" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-950 mb-8 transition-colors">
-        <ArrowLeft size={13} /> 活动管理
+      <Link to="/admin" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-violet-400 mb-8 transition-colors">
+        <ArrowLeft size={13} /> {t('admin.organizers.backToEvents')}
       </Link>
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-xl font-semibold text-gray-950 tracking-tight">组织者管理</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{organizers.length} 个组织者账号</p>
+          <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#4B4552' }}>
+            {t('admin.organizers.pageTitle')}
+          </h1>
+          <p className="text-sm text-gray-400 mt-0.5">
+            {t('admin.organizers.count', { count: organizers.length })}
+          </p>
         </div>
         {!adding && (
           <button
             onClick={() => { setAdding(true); setFormError(''); setNewForm({ name: '', password: '' }) }}
             className="btn-primary flex items-center gap-1.5 text-xs"
           >
-            <Plus size={14} /> 添加组织者
+            <Plus size={14} /> {t('admin.organizers.addButton')}
           </button>
         )}
       </div>
 
-      {/* Error banner */}
       {bannerError && (
         <div className="mb-5 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-600 leading-relaxed flex items-start gap-2">
           <span className="flex-1">{bannerError}</span>
@@ -149,26 +136,27 @@ export default function AdminOrganizers() {
         </div>
       )}
 
-      {/* Add organizer form */}
       {adding && (
         <div className="card p-5 mb-6">
-          <p className="text-sm font-medium text-gray-950 mb-4">添加新组织者</p>
+          <p className="text-sm font-medium mb-4" style={{ color: '#4B4552' }}>
+            {t('admin.organizers.addTitle')}
+          </p>
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">名字</label>
+              <label className="block text-xs text-gray-400 mb-1.5">{t('admin.organizers.nameLabel')}</label>
               <input
                 className="input-field"
-                placeholder="组织者昵称"
+                placeholder={t('admin.organizers.namePlaceholder')}
                 value={newForm.name}
                 onChange={e => setNewForm(f => ({ ...f, name: e.target.value }))}
                 autoFocus
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">登录密码</label>
+              <label className="block text-xs text-gray-400 mb-1.5">{t('admin.organizers.passwordLabel')}</label>
               <input
                 className="input-field"
-                placeholder="设置密码（须唯一）"
+                placeholder={t('admin.organizers.passwordPlaceholder')}
                 value={newForm.password}
                 onChange={e => setNewForm(f => ({ ...f, password: e.target.value }))}
                 onKeyDown={e => e.key === 'Enter' && handleAdd()}
@@ -182,32 +170,39 @@ export default function AdminOrganizers() {
               disabled={saving}
               className="btn-primary text-xs px-4 py-2 disabled:opacity-40"
             >
-              {saving ? '保存中…' : '保存'}
+              {saving ? t('admin.organizers.saving') : t('admin.organizers.save')}
             </button>
             <button
               onClick={() => { setAdding(false); setFormError('') }}
               className="btn-secondary text-xs px-4 py-2"
             >
-              取消
+              {t('admin.organizers.cancel')}
             </button>
           </div>
         </div>
       )}
 
-      {/* Organizer table */}
       {organizers.length === 0 ? (
         <div className="text-center py-24">
-          <p className="text-sm text-gray-400">还没有组织者账号</p>
+          <p className="text-sm text-gray-400">{t('admin.organizers.empty')}</p>
         </div>
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 w-8">#</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400">名字</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400">登录密码</th>
-                <th className="px-4 py-3 text-xs font-medium text-gray-400 text-right w-20">操作</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 w-8">
+                  {t('admin.organizers.colIndex')}
+                </th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400">
+                  {t('admin.organizers.colName')}
+                </th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400">
+                  {t('admin.organizers.colPassword')}
+                </th>
+                <th className="px-4 py-3 text-xs font-medium text-gray-400 text-right w-20">
+                  {t('admin.organizers.colActions')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -222,9 +217,8 @@ export default function AdminOrganizers() {
                     className={`${idx < organizers.length - 1 ? 'border-b border-gray-100' : ''} hover:bg-gray-50 transition-colors`}
                   >
                     <td className="px-5 py-3.5 text-xs text-gray-300">{idx + 1}</td>
-                    <td className="px-5 py-3.5 text-sm font-medium text-gray-950">{org.name}</td>
+                    <td className="px-5 py-3.5 text-sm font-medium" style={{ color: '#4B4552' }}>{org.name}</td>
 
-                    {/* Password cell */}
                     <td className="px-5 py-3.5">
                       {isEditing ? (
                         <div className="flex items-center gap-1.5">
@@ -234,21 +228,22 @@ export default function AdminOrganizers() {
                             onChange={e => setEditPassword(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter') handleSavePassword(org); if (e.key === 'Escape') cancelEdit() }}
                             autoFocus
-                            placeholder="新密码"
-                            className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-950 focus:outline-none focus:border-gray-400 w-32"
+                            placeholder={t('admin.organizers.newPasswordPlaceholder')}
+                            className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:border-gray-400 w-32"
+                            style={{ color: '#4B4552' }}
                           />
                           <button
                             onClick={() => handleSavePassword(org)}
                             disabled={isActing}
                             className="p-1 rounded text-green-600 hover:bg-green-50 transition-all disabled:opacity-30"
-                            title="保存"
+                            title={t('admin.organizers.save')}
                           >
                             <Check size={12} />
                           </button>
                           <button
                             onClick={cancelEdit}
                             className="p-1 rounded text-gray-400 hover:bg-gray-100 transition-all"
-                            title="取消"
+                            title={t('admin.organizers.cancel')}
                           >
                             <X size={12} />
                           </button>
@@ -261,7 +256,7 @@ export default function AdminOrganizers() {
                           <button
                             onClick={() => toggleShowPwd(org.id)}
                             className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-gray-300 hover:text-gray-600 transition-all"
-                            title={pwdVisible ? '隐藏' : '显示密码'}
+                            title={pwdVisible ? t('admin.organizers.hidePassword') : t('admin.organizers.showPassword')}
                           >
                             {pwdVisible ? <EyeOff size={11} /> : <Eye size={11} />}
                           </button>
@@ -269,15 +264,14 @@ export default function AdminOrganizers() {
                       )}
                     </td>
 
-                    {/* Actions */}
                     <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-0.5">
                         {!isEditing && (
                           <button
                             onClick={() => startEditPassword(org)}
                             disabled={isActing}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-950 hover:bg-gray-100 transition-all disabled:opacity-30"
-                            title="修改密码"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-violet-500 hover:bg-violet-50 transition-all disabled:opacity-30"
+                            title={t('admin.organizers.editPasswordTitle')}
                           >
                             <Pencil size={13} />
                           </button>
@@ -286,7 +280,7 @@ export default function AdminOrganizers() {
                           onClick={() => handleDelete(org)}
                           disabled={isActing || isEditing}
                           className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30"
-                          title="删除组织者"
+                          title={t('admin.organizers.deleteTitle')}
                         >
                           <Trash2 size={13} />
                         </button>
@@ -300,9 +294,8 @@ export default function AdminOrganizers() {
         </div>
       )}
 
-      {/* Note about password uniqueness */}
       <p className="text-[11px] text-gray-300 mt-5 text-center leading-relaxed">
-        每个密码须唯一（Mock 模式通过密码区分账号）。接入 Supabase Auth 后将改为邮箱 + 密码登录。
+        {t('admin.organizers.passwordNote')}
       </p>
     </div>
   )

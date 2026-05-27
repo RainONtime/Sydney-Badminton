@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft } from 'lucide-react'
 import { getEventById, getRegistrationsByEvent, createRegistration } from '../services/dataService'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
@@ -13,6 +14,7 @@ const EMPTY_FORM = { name: '', gender: '', level: '', notes: '', quantity: 1 }
 
 export default function EventPage() {
   const { id } = useParams()
+  const { t } = useTranslation()
   const [event, setEvent]               = useState(null)
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading]           = useState(true)
@@ -35,7 +37,7 @@ export default function EventPage() {
 
       if (evErr) {
         // Network / Supabase error — distinct from "event not found"
-        setPageError('加载失败，请刷新重试')
+        setPageError(t('event.loadError'))
         setLoading(false)
         return
       }
@@ -51,7 +53,7 @@ export default function EventPage() {
 
   if (loading) return (
     <div className="min-h-[70vh] flex items-center justify-center">
-      <LoadingSpinner text="正在加载活动..." />
+      <LoadingSpinner text={t('home.loading')} />
     </div>
   )
 
@@ -59,15 +61,15 @@ export default function EventPage() {
     <div className="max-w-2xl mx-auto px-5 py-24 text-center">
       <p className="text-sm text-red-400 mb-4">{pageError}</p>
       <Link to="/" className="text-xs text-gray-500 hover:text-gray-950 underline underline-offset-2 transition-colors">
-        ← 返回首页
+        {t('event.backToHome')}
       </Link>
     </div>
   )
 
   if (!event) return (
     <div className="max-w-2xl mx-auto px-5 py-24 text-center">
-      <p className="text-sm text-gray-400 mb-4">活动不存在或已删除</p>
-      <Link to="/" className="text-sm text-gray-950 hover:underline">← 返回</Link>
+      <p className="text-sm text-gray-400 mb-4">{t('event.notFound')}</p>
+      <Link to="/" className="text-sm text-gray-950 hover:underline">{t('event.backToAll')}</Link>
     </div>
   )
 
@@ -86,8 +88,8 @@ export default function EventPage() {
 
   async function handleStep1(e) {
     e.preventDefault()
-    if (!form.name.trim()) { setError('请填写名字'); return }
-    if (!form.gender)      { setError('请选择性别'); return }
+    if (!form.name.trim()) { setError(t('form.errorName')); return }
+    if (!form.gender)      { setError(t('form.errorGender')); return }
     setError('')
 
     // Waitlist path: skip payment step, submit directly
@@ -104,14 +106,14 @@ export default function EventPage() {
         payment_screenshot: null,
       })
       setSubmitting(false)
-      if (err) { setError('提交失败，请稍后重试'); return }
+      if (err) { setError(t('form.errorSubmit')); return }
       setRegistrations(r => [...r, data])
       setWasWaitlisted(true)
       setStep(3)
       return
     }
 
-    if (form.quantity > spotsLeft) { setError(`剩余名额不足，当前仅剩 ${spotsLeft} 个`); return }
+    if (form.quantity > spotsLeft) { setError(t('form.errorSpots', { count: spotsLeft })); return }
     setStep(2)
   }
 
@@ -129,7 +131,7 @@ export default function EventPage() {
       payment_screenshot: screenshot || null,
     })
     setSubmitting(false)
-    if (err) { setError('提交失败，请稍后重试'); setStep(1); return }
+    if (err) { setError(t('form.errorSubmit')); setStep(1); return }
     setRegistrations(r => [...r, data])
     setStep(3)
   }
@@ -141,21 +143,21 @@ export default function EventPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#f5f5f7' }}>
+    <div className="min-h-screen">
       <div
         className="max-w-2xl mx-auto px-4 sm:px-5 py-6 sm:py-12"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 24px)' }}
       >
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-950 mb-6 sm:mb-8 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-violet-400 mb-6 sm:mb-8 transition-colors"
         >
-          <ArrowLeft size={13} /> 所有活动
+          <ArrowLeft size={13} /> {t('event.allEvents')}
         </Link>
 
         <EventInfo event={event} spotsLeft={spotsLeft} isFull={isFull} />
 
-        <div className="border-t border-gray-200 mb-7" />
+        <div className="border-t border-violet-100/60 mb-7" />
 
         {/* Registration flow */}
         <div className="mb-10">
@@ -176,9 +178,9 @@ export default function EventPage() {
           ) : step === 2 ? (
             <div>
               <div className="flex items-center gap-2 mb-6">
-                <h2 className="text-base font-semibold text-gray-950">付款</h2>
+                <h2 className="text-base font-semibold" style={{ color: '#4B4552' }}>{t('event.paymentStep')}</h2>
                 <div className="flex items-center gap-1.5 ml-auto">
-                  <span className="w-2 h-2 rounded-full bg-gray-200" />
+                  <span className="w-2 h-2 rounded-full bg-violet-100" />
                   <span className="w-2 h-2 rounded-full bg-brand" />
                 </div>
               </div>
@@ -194,8 +196,8 @@ export default function EventPage() {
         </div>
 
         {/* Participant list */}
-        <div className="border-t border-gray-200 pt-7">
-          <h2 className="text-base font-semibold text-gray-950 mb-5">报名名单</h2>
+        <div className="border-t border-violet-100/60 pt-7">
+          <h2 className="text-base font-semibold mb-5" style={{ color: '#4B4552' }}>{t('event.participantList')}</h2>
           <ParticipantList registrations={registrations} />
         </div>
       </div>

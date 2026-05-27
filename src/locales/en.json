@@ -1,0 +1,212 @@
+{
+  "common": {
+    "retry": "Try again",
+    "free": "Free",
+    "perPerson": "/ person",
+    "submitting": "Submitting…",
+    "back": "Back"
+  },
+  "nav": {
+    "events": "Events",
+    "adminEvents": "Manage Events",
+    "organizers": "Organisers",
+    "logout": "Log out",
+    "adminLogin": "Organiser Login"
+  },
+  "home": {
+    "title": "Events",
+    "subtitle": "Browse sessions and RSVP",
+    "loading": "Loading events…",
+    "loadError": "Failed to load events. Please refresh and try again.",
+    "empty": "No upcoming events — check back soon."
+  },
+  "event": {
+    "full": "Full",
+    "spotsLeft_one": "{{count}} spot left",
+    "spotsLeft_other": "{{count}} spots left",
+    "spotsLeftShort_one": "{{count}} left",
+    "spotsLeftShort_other": "{{count}} left",
+    "timeLabel": "DATE & TIME",
+    "locationLabel": "VENUE",
+    "priceLabel": "PRICE",
+    "spotsLabel": "SPOTS",
+    "organizer": "Organiser",
+    "wechat": "WeChat",
+    "cancelNote": "To cancel or adjust your booking, contact the organiser via WeChat for a refund.",
+    "allEvents": "All events",
+    "participantList": "Attendees",
+    "paymentStep": "Payment",
+    "loadError": "Something went wrong. Please refresh.",
+    "notFound": "Event not found or has been removed.",
+    "backToHome": "← Back to events",
+    "backToAll": "← Back"
+  },
+  "form": {
+    "title": "RSVP",
+    "name": "Name",
+    "namePlaceholder": "Your name or WeChat nickname",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "levelLabel": "Skill Level (optional)",
+    "levelNone": "Any",
+    "level": "Level {{n}}",
+    "quantityLabel": "Party Size (max 3)",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "Any special requests or notes",
+    "joinWaitlist": "Full — Join Waitlist",
+    "nextPayment": "Next: Payment",
+    "confirm": "Confirm RSVP",
+    "errorName": "Please enter your name",
+    "errorGender": "Please select your gender",
+    "errorSpots_one": "Not enough spots — only {{count}} left",
+    "errorSpots_other": "Not enough spots — only {{count}} left",
+    "errorSubmit": "Submission failed, please try again."
+  },
+  "success": {
+    "waitlistTitle": "You're on the waitlist",
+    "waitlistBody": "{{name}}, the event is full but you've been added to the waitlist. If a spot opens up, the organiser will confirm your registration and notify you.",
+    "backToEvent": "Back to event",
+    "confirmedTitle": "You're in!",
+    "pendingTitle": "Submitted — Pending confirmation",
+    "confirmedBody": "You're all set, {{name}}! See you there.",
+    "pendingBody": "Your spot will be confirmed once the organiser verifies your payment.",
+    "registerAgain": "Register another person"
+  },
+  "participants": {
+    "empty": "No registrations yet",
+    "confirmed": "{{count}} confirmed",
+    "male": "M",
+    "female": "F",
+    "pending": "Pending",
+    "waitlist_one": "{{count}} on the waitlist",
+    "waitlist_other": "{{count}} on the waitlist"
+  },
+  "admin": {
+    "roles": {
+      "super": "Super Admin",
+      "organizer": "Organiser"
+    },
+    "events": {
+      "title": "Manage Events",
+      "totalCount": "{{count}} events total",
+      "myCount": "{{count}} event(s)",
+      "activeQuota": "Active {{active}}/3",
+      "quotaReached": " — limit reached",
+      "logoutTitle": "Log out",
+      "createButton": "New Event",
+      "quotaTitle": "Active event limit reached",
+      "quotaWarning": "You've reached the limit of 3 simultaneous active events. Archive or cancel an existing event to create a new one.",
+      "empty": "No events yet",
+      "createFirst": "Create your first event",
+      "deleteConfirm": "Delete this event? All registrations will also be removed.",
+      "columns": {
+        "name": "Event Name",
+        "organizer": "Organiser",
+        "date": "Date",
+        "registrations": "Registrations",
+        "status": "Status"
+      },
+      "status": {
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "actions": {
+        "registrations": "Registrations",
+        "edit": "Edit",
+        "delete": "Delete"
+      }
+    },
+    "registrations": {
+      "backToEvents": "Manage Events",
+      "confirmed": "confirmed",
+      "pending": "pending",
+      "waitlisted": "waitlisted",
+      "exportCSV": "Export CSV",
+      "empty": "No registrations yet",
+      "deleteConfirm": "Remove {{name}}'s registration?",
+      "rejectConfirm": "Reject {{name}}'s registration?",
+      "quantityZeroAlert": "Party size cannot be 0. To fully cancel, use Reject or Delete.",
+      "noSpotsError": "No spots available — cannot promote \"{{name}}\". Free up a spot first.",
+      "columns": {
+        "index": "#",
+        "name": "Name",
+        "gender": "Gender",
+        "level": "Level",
+        "quantity": "Party",
+        "status": "Status",
+        "notes": "Notes",
+        "actions": "Actions"
+      },
+      "actions": {
+        "details": "View details",
+        "confirm": "Confirm registration",
+        "reject": "Reject registration",
+        "promote": "Promote to registered",
+        "promoteShort": "Promote",
+        "acting": "Processing…",
+        "removeWaitlist": "Remove from waitlist",
+        "delete": "Delete record",
+        "save": "Save",
+        "cancel": "Cancel",
+        "editQty": "Edit party size"
+      },
+      "gender": {
+        "male": "M",
+        "female": "F",
+        "other": "—"
+      }
+    },
+    "organizers": {
+      "pageTitle": "Organisers",
+      "backToEvents": "Manage Events",
+      "count": "{{count}} organiser account(s)",
+      "addButton": "Add Organiser",
+      "addTitle": "Add New Organiser",
+      "nameLabel": "Name",
+      "namePlaceholder": "Organiser nickname",
+      "passwordLabel": "Login Password",
+      "passwordPlaceholder": "Set a unique password",
+      "saving": "Saving…",
+      "save": "Save",
+      "cancel": "Cancel",
+      "empty": "No organiser accounts yet",
+      "colIndex": "#",
+      "colName": "Name",
+      "colPassword": "Password",
+      "colActions": "Actions",
+      "newPasswordPlaceholder": "New password",
+      "deleteConfirm": "Delete organiser \"{{name}}\"? This cannot be undone.",
+      "deleteHasEvents": "Cannot delete \"{{name}}\": they have {{count}} active event(s). Archive or cancel those events first.",
+      "errorName": "Please enter a name",
+      "errorPassword": "Please enter a password",
+      "hidePassword": "Hide",
+      "showPassword": "Show password",
+      "editPasswordTitle": "Change password",
+      "deleteTitle": "Delete organiser",
+      "passwordNote": "Each password must be unique (Mock mode uses passwords to identify accounts). After connecting Supabase Auth, login will switch to email + password."
+    }
+  },
+  "payment": {
+    "free": "This event is free",
+    "freeNote": "No payment required — your spot is confirmed.",
+    "amountLabel": "Amount Due",
+    "chooseMethod": "Payment Method",
+    "wechatMethod": "💚 WeChat Pay",
+    "bankMethod": "🏦 Bank Transfer",
+    "wechatTitle": "WeChat Pay",
+    "wechatNoteLabel": "⚠️ Transfer Note / RMB Amount",
+    "copy": "Copy",
+    "noQR": "QR code not yet uploaded",
+    "contactOrganizer": "Please contact the organiser for payment details.",
+    "noBankInfo": "Please contact the organiser for payment details.",
+    "bankTitle": "Bank Transfer / PayID",
+    "uploadLabel": "Upload payment screenshot",
+    "compressing": "Compressing image…",
+    "uploadHint": "Click or drag to upload screenshot",
+    "uploadFormats": "JPG or PNG — auto-compressed",
+    "submitForReview": "Submit for Review"
+  }
+}

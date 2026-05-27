@@ -30,7 +30,6 @@ export default function AdminLogin() {
         return
       }
     } else {
-      // Supabase mode: look up password in organizers table
       const { data, error: loginErr } = await adminLogin(password)
       if (data && !loginErr) {
         setAdminUser({ id: data.id, name: data.name, role: data.role })
@@ -49,18 +48,16 @@ export default function AdminLogin() {
       <div className="w-full max-w-xs">
 
         <div className="flex flex-col items-center mb-10">
-          <div
-            className="w-16 h-16 rounded-full bg-brand mb-4"
-            style={{ backgroundImage: 'url(/shuttlecock.png)', backgroundSize: '190%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
-          />
-          <span className="font-semibold text-sm tracking-tight text-gray-950">Duoduo Badminton</span>
+          <img src="/logo.png" alt="Duoduo Badminton" className="w-24 h-24 mx-auto mb-6 transition-transform duration-300 hover:scale-105" />
+          <span className="font-semibold text-sm tracking-tight" style={{ color: '#4B4552' }}>
+            Duoduo Badminton
+          </span>
         </div>
 
-        <h1 className="text-xl font-semibold text-gray-950 mb-1">组织者登录</h1>
+        <h1 className="text-xl font-semibold mb-1" style={{ color: '#4B4552' }}>组织者登录</h1>
         <p className="text-sm text-gray-400 mb-7">请输入您的专属通行码</p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          {/* Password field with visibility toggle */}
           <div className="relative">
             <input
               type={visible ? 'text' : 'password'}
@@ -74,7 +71,7 @@ export default function AdminLogin() {
             <button
               type="button"
               onClick={() => setVisible(v => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-violet-400 transition-colors"
               tabIndex={-1}
               aria-label={visible ? '隐藏密码' : '显示密码'}
             >
@@ -82,7 +79,7 @@ export default function AdminLogin() {
             </button>
           </div>
 
-          {error && <p className="text-xs text-red-500">{error}</p>}
+          {error && <p className="text-xs text-rose-400">{error}</p>}
 
           <button type="submit" disabled={isSubmitting} className="btn-primary w-full py-2.5 disabled:opacity-50 flex items-center justify-center gap-2">
             {isSubmitting && (
