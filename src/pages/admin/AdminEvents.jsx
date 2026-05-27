@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { Plus, Pencil, Trash2, Users, LogOut } from 'lucide-react'
-import { getAdminEvents, deleteEvent, getRegistrationCount } from '../../services/dataService'
+import { getAdminEvents, deleteEvent } from '../../services/dataService'
 import { getAdminUser, clearAdminUser } from '../../services/authService'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
@@ -14,23 +14,14 @@ export default function AdminEvents() {
   const isSuper = user?.role === 'super'
 
   const [events, setEvents] = useState([])
-  const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(null)
 
+  // getAdminEvents now embeds registration_count — no N+1 needed
   async function load() {
     setLoading(true)
     const { data } = await getAdminEvents(user)
-    if (data) {
-      setEvents(data)
-      const entries = await Promise.all(
-        data.map(async e => {
-          const { count } = await getRegistrationCount(e.id)
-          return [e.id, count || 0]
-        })
-      )
-      setCounts(Object.fromEntries(entries))
-    }
+    if (data) setEvents(data)
     setLoading(false)
   }
 
@@ -148,8 +139,8 @@ export default function AdminEvents() {
                     {format(parseISO(event.date), 'yyyy/MM/dd')}
                   </td>
                   <td className="px-5 py-4 text-sm text-center">
-                    <span className={counts[event.id] >= event.max_participants ? 'text-gray-400' : 'text-gray-950 font-medium'}>
-                      {counts[event.id] || 0}
+                    <span className={(event.registration_count ?? 0) >= event.max_participants ? 'text-gray-400' : 'text-gray-950 font-medium'}>
+                      {event.registration_count ?? 0}
                     </span>
                     <span className="text-gray-300">/{event.max_participants}</span>
                   </td>

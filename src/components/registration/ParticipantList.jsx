@@ -6,20 +6,18 @@ const GENDER_ICON = {
   other:  { icon: null, label: '其他', color: 'text-purple-500' },
 }
 
-// 统一的图标渲染：♂ ♀ 与上下文同号 text-sm，ShoppingBag 精确 14px，
-// 统一用 -translate-y-[1px] 做光学微调（flex 子元素用 transform，不用 relative top）
+// 固定高度容器锁死对齐：h-6 绝对高度 + items-center 强制 SVG 与文字共线，
+// 无需任何 translate-y 光学修正。
 function GenderIcon({ gender, size = 'sm' }) {
   const g = GENDER_ICON[gender] || GENDER_ICON.male
   const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'   // 14px / 16px
 
   return (
-    <span className={`inline-flex items-center shrink-0 ${g.color}`}>
+    <span className={`inline-flex items-center justify-center h-6 shrink-0 ${g.color}`}>
       {g.icon ? (
-        <span className="text-sm leading-none -translate-y-[1px] select-none">
-          {g.icon}
-        </span>
+        <span className="text-sm leading-none select-none">{g.icon}</span>
       ) : (
-        <ShoppingBag className={`${iconSize} shrink-0 -translate-y-[1px]`} />
+        <ShoppingBag className={`${iconSize} shrink-0`} />
       )}
     </span>
   )
@@ -67,19 +65,19 @@ export default function ParticipantList({ registrations }) {
             </span>
 
             {maleCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 text-blue-500">
+              <span className="inline-flex items-center h-6 gap-1.5 text-blue-500">
                 <GenderIcon gender="male" size="sm" />
                 <span className="leading-none">{maleCount} 男</span>
               </span>
             )}
             {femaleCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 text-pink-500">
+              <span className="inline-flex items-center h-6 gap-1.5 text-pink-500">
                 <GenderIcon gender="female" size="sm" />
                 <span className="leading-none">{femaleCount} 女</span>
               </span>
             )}
             {otherCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 text-purple-500">
+              <span className="inline-flex items-center h-6 gap-1.5 text-purple-500">
                 <GenderIcon gender="other" size="sm" />
                 <span className="leading-none">{otherCount}</span>
               </span>
@@ -103,18 +101,19 @@ export default function ParticipantList({ registrations }) {
                     isPending ? 'bg-amber-50 border border-amber-100' : 'bg-gray-50'
                   }`}
                 >
-                  <GenderIcon gender={reg.gender} size="md" />
-
-                  <span className={`flex-1 font-medium leading-tight ${
-                    isPending ? 'text-gray-600' : 'text-gray-950'
-                  }`}>
-                    {reg.name}
+                  <div className="flex items-center h-6 gap-1.5 flex-1 min-w-0">
+                    <GenderIcon gender={reg.gender} size="md" />
+                    <span className={`font-medium leading-none truncate ${
+                      isPending ? 'text-gray-600' : 'text-gray-950'
+                    }`}>
+                      {reg.name}
+                    </span>
                     {reg.quantity > 1 && (
-                      <span className="text-gray-400 font-normal ml-1 text-xs">
+                      <span className="text-gray-400 font-normal text-xs leading-none shrink-0">
                         ×{reg.quantity}
                       </span>
                     )}
-                  </span>
+                  </div>
 
                   {levelBadge(reg.skill_level)}
 

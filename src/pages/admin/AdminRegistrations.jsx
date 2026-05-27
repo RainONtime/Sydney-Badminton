@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Trash2, Download, X, Check, Pencil, Eye } from 'lucide-react'
-import { getEventById, getRegistrationsByEvent, deleteRegistration, updateRegistrationStatus, updateRegistrationQuantity, promoteWaitlistedRegistration } from '../../services/dataService'
+import { getEventById, getAdminRegistrationsByEvent, deleteRegistration, updateRegistrationStatus, updateRegistrationQuantity, promoteWaitlistedRegistration } from '../../services/dataService'
 import { getAdminUser } from '../../services/authService'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import StatusBadge from '../../components/ui/StatusBadge'
@@ -28,7 +28,7 @@ export default function AdminRegistrations() {
     async function load() {
       const [{ data: ev }, { data: regs }] = await Promise.all([
         getEventById(id),
-        getRegistrationsByEvent(id),
+        getAdminRegistrationsByEvent(id),
       ])
 
       // Ownership check: organizers can only manage their own events

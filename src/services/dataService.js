@@ -7,16 +7,67 @@ function toAppError(sbError) {
   return sbError ? { message: sbError.message || String(sbError) } : null
 }
 
+/**
+ * Extract the relative file path inside the `payment_screenshots` bucket
+ * from a Supabase Storage public URL.
+ * Returns null for base64 data URLs, non-storage URLs, or any parse failure.
+ */
+function extractFilePathFromUrl(url) {
+  if (!url || typeof url !== 'string' || url.startsWith('data:')) return null
+  try {
+    const marker = '/storage/v1/object/public/payment_screenshots/'
+    const idx = url.indexOf(marker)
+    if (idx === -1) return null
+    return decodeURIComponent(url.slice(idx + marker.length))
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Attempt to delete a single file from Supabase Storage.
+ * Errors are logged as warnings and never re-thrown — they must not block DB ops.
+ */
+async function deleteStorageFile(url) {
+  const path = extractFilePathFromUrl(url)
+  if (!path) return
+  try {
+    const { error } = await supabase.storage
+      .from('payment_screenshots')
+      .remove([path])
+    if (error) console.warn('[storage] remove failed:', path, error.message)
+  } catch (e) {
+    console.warn('[storage] remove exception:', path, e)
+  }
+}
+
 // ── Events (public) ───────────────────────────────────────────────────────────
 
-/** @returns {Promise<import('../types').ServiceResult>} */
+/**
+ * Fetch active events for the public home page.
+ * Embeds registration data to avoid N+1 queries; computes `registration_count`
+ * (excludes rejected + waitlisted) client-side and strips the raw array.
+ * @returns {Promise<import('../types').ServiceResult>}
+ */
 export async function getEvents() {
   const { data, error } = await supabase
     .from('events')
-    .select('*')
+    .select('*, registrations(id, quantity, payment_status)')
     .eq('status', 'active')
     .order('date', { ascending: true })
-  return { data: data || [], error: toAppError(error) }
+
+  if (error) return { data: [], error: toAppError(error) }
+
+  const events = (data || []).map(ev => {
+    const regs = ev.registrations || []
+    const registration_count = regs
+      .filter(r => r.payment_status !== 'rejected' && r.payment_status !== 'waitlisted')
+      .reduce((sum, r) => sum + (r.quantity || 1), 0)
+    const { registrations: _, ...rest } = ev
+    return { ...rest, registration_count }
+  })
+
+  return { data: events, error: null }
 }
 
 /** @returns {Promise<import('../types').ServiceResult>} */
@@ -27,7 +78,7 @@ export async function getEventById(id) {
     .eq('id', id)
     .maybeSingle()
   if (error) return { data: null, error: toAppError(error) }
-  if (!data) return { data: null, error: { message: '活动不存在' } }
+  if (!data)  return { data: null, error: { message: '活动不存在' } }
   return { data, error: null }
 }
 
@@ -35,12 +86,7 @@ export async function getEventById(id) {
 
 /**
  * Fetch events for the admin panel, scoped by role.
- * - super: all events
- * - organizer: only events where organizer_id === user.id
- *
- * NOTE: In Supabase this is enforced client-side (anon key).
- * Once Supabase Auth is wired up, add a matching RLS policy so
- * the server also enforces it.
+ * Embeds registration count in a single query (no N+1).
  *
  * @param {{ id: string, role: 'super'|'organizer' }|null} user
  * @returns {Promise<import('../types').ServiceResult>}
@@ -48,7 +94,7 @@ export async function getEventById(id) {
 export async function getAdminEvents(user) {
   let query = supabase
     .from('events')
-    .select('*')
+    .select('*, registrations(id, quantity, payment_status)')
     .order('date', { ascending: false })
 
   if (user?.role === 'organizer') {
@@ -56,7 +102,18 @@ export async function getAdminEvents(user) {
   }
 
   const { data, error } = await query
-  return { data: data || [], error: toAppError(error) }
+  if (error) return { data: [], error: toAppError(error) }
+
+  const events = (data || []).map(ev => {
+    const regs = ev.registrations || []
+    const registration_count = regs
+      .filter(r => r.payment_status !== 'rejected' && r.payment_status !== 'waitlisted')
+      .reduce((sum, r) => sum + (r.quantity || 1), 0)
+    const { registrations: _, ...rest } = ev
+    return { ...rest, registration_count }
+  })
+
+  return { data: events, error: null }
 }
 
 /** Legacy — prefer getAdminEvents(user) in admin pages. */
@@ -85,9 +142,6 @@ export async function getOrganizerActiveCount(organizerId) {
 /**
  * Create a new event.
  * For organizer role, enforces a max of 3 simultaneous active events.
- * @param {object} event
- * @param {{ id: string, role: 'super'|'organizer' }|null} [user]
- * @returns {Promise<import('../types').ServiceResult>}
  */
 export async function createEvent(event, user = null) {
   if (user?.role === 'organizer') {
@@ -99,7 +153,6 @@ export async function createEvent(event, user = null) {
     ...event,
     organizer_id: user?.role === 'organizer' ? user.id : (event.organizer_id || null),
   }
-  // Strip client-side-only fields that aren't in the DB schema
   delete payload.id
   delete payload.created_at
 
@@ -122,18 +175,43 @@ export async function updateEvent(id, updates) {
   return { data: data || null, error: toAppError(error) }
 }
 
-/** @returns {Promise<import('../types').ServiceResult>} */
+/**
+ * Delete an event and its registrations (CASCADE).
+ * Attempts to clean up Supabase Storage files for all registration screenshots
+ * before the DB delete. Storage errors are non-fatal.
+ */
 export async function deleteEvent(id) {
+  // Fetch screenshot URLs for all registrations under this event
+  const { data: regs } = await supabase
+    .from('registrations')
+    .select('payment_screenshot')
+    .eq('event_id', id)
+    .not('payment_screenshot', 'is', null)
+
+  // Batch-remove storage files (non-blocking on error)
+  if (regs?.length) {
+    const paths = regs
+      .map(r => extractFilePathFromUrl(r.payment_screenshot))
+      .filter(Boolean)
+    if (paths.length) {
+      try {
+        const { error: stErr } = await supabase.storage
+          .from('payment_screenshots')
+          .remove(paths)
+        if (stErr) console.warn('[storage] batch remove failed:', stErr.message)
+      } catch (e) {
+        console.warn('[storage] batch remove exception:', e)
+      }
+    }
+  }
+
   const { error } = await supabase.from('events').delete().eq('id', id)
   return { error: toAppError(error) }
 }
 
 // ── Organizer management (super admin only) ───────────────────────────────────
 
-/**
- * List all organizer accounts (role === 'organizer').
- * @returns {Promise<import('../types').ServiceResult>}
- */
+/** @returns {Promise<import('../types').ServiceResult>} */
 export async function getOrganizers() {
   const { data, error } = await supabase
     .from('organizers')
@@ -143,17 +221,11 @@ export async function getOrganizers() {
   return { data: data || [], error: toAppError(error) }
 }
 
-/**
- * Add a new organizer account.
- * Enforces unique passwords (required for password-based login lookup).
- * @param {{ name: string, password: string }} param0
- * @returns {Promise<import('../types').ServiceResult>}
- */
+/** @returns {Promise<import('../types').ServiceResult>} */
 export async function addOrganizer({ name, password }) {
   if (!name?.trim())     return { data: null, error: { message: '名字不能为空' } }
   if (!password?.trim()) return { data: null, error: { message: '密码不能为空' } }
 
-  // Duplicate-password check (unique index also enforces this server-side)
   const { data: existing } = await supabase
     .from('organizers')
     .select('id')
@@ -172,9 +244,6 @@ export async function addOrganizer({ name, password }) {
 /**
  * Delete an organizer account.
  * Blocked if the organizer still has active events.
- * Returns { error: { message: 'HAS_ACTIVE_EVENTS', count: N } } when blocked.
- * @param {string} id
- * @returns {Promise<import('../types').ServiceResult>}
  */
 export async function deleteOrganizer(id) {
   const { count, error: countErr } = await supabase
@@ -189,13 +258,7 @@ export async function deleteOrganizer(id) {
   return { error: toAppError(error) }
 }
 
-/**
- * Update an organizer's login password.
- * Enforces unique passwords across all accounts.
- * @param {string} id
- * @param {string} newPassword
- * @returns {Promise<import('../types').ServiceResult>}
- */
+/** @returns {Promise<import('../types').ServiceResult>} */
 export async function updateOrganizerPassword(id, newPassword) {
   if (!newPassword?.trim()) return { error: { message: '密码不能为空' } }
 
@@ -214,35 +277,39 @@ export async function updateOrganizerPassword(id, newPassword) {
   return { error: toAppError(error) }
 }
 
-/**
- * Look up an organizer by password (client-side auth).
- * Returns { data: { id, name, role }, error }.
- *
- * Called by AdminLogin.jsx in Supabase mode instead of the mock mockUsers.find().
- * Wire it up in AdminLogin's non-mock branch:
- *   const { data, error } = await adminLogin(password)
- *
- * TODO: Replace with Supabase Auth (email + hashed password) before
- * going live. Plaintext passwords + anon key = anyone can read all passwords.
- *
- * @param {string} password
- * @returns {Promise<import('../types').ServiceResult>}
- */
+/** @returns {Promise<import('../types').ServiceResult>} */
 export async function adminLogin(password) {
   const { data, error } = await supabase
     .from('organizers')
     .select('id, name, role')
     .eq('password', password)
     .maybeSingle()
-  if (error)  return { data: null, error: toAppError(error) }
+  if (error) return { data: null, error: toAppError(error) }
   if (!data)  return { data: null, error: { message: 'INVALID_PASSWORD' } }
   return { data: { id: data.id, name: data.name, role: data.role }, error: null }
 }
 
 // ── Registrations ─────────────────────────────────────────────────────────────
 
-/** @returns {Promise<import('../types').ServiceResult>} */
+/**
+ * Public (slim) — used by EventPage to render the participant list.
+ * Excludes payment_screenshot and other privacy/size-heavy fields.
+ * @returns {Promise<import('../types').ServiceResult>}
+ */
 export async function getRegistrationsByEvent(eventId) {
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('id, event_id, name, gender, skill_level, quantity, notes, payment_status, created_at')
+    .eq('event_id', eventId)
+    .order('created_at', { ascending: true })
+  return { data: data || [], error: toAppError(error) }
+}
+
+/**
+ * Admin (full) — used by AdminRegistrations to show all fields including screenshots.
+ * @returns {Promise<import('../types').ServiceResult>}
+ */
+export async function getAdminRegistrationsByEvent(eventId) {
   const { data, error } = await supabase
     .from('registrations')
     .select('*')
@@ -253,6 +320,7 @@ export async function getRegistrationsByEvent(eventId) {
 
 /**
  * Total booked spots for an event (excludes rejected + waitlisted).
+ * Still available for isolated count checks; home/admin pages use embedded counts.
  * @returns {Promise<{ count: number, error: any }>}
  */
 export async function getRegistrationCount(eventId) {
@@ -279,11 +347,7 @@ export async function createRegistration(registration) {
   return { data: data || null, error: toAppError(error) }
 }
 
-/**
- * Update a registration's payment_status.
- * eventId param is kept for API compatibility with the mock version.
- * @returns {Promise<import('../types').ServiceResult>}
- */
+/** @returns {Promise<import('../types').ServiceResult>} */
 export async function updateRegistrationStatus(id, _eventId, status) {
   const { data, error } = await supabase
     .from('registrations')
@@ -294,12 +358,7 @@ export async function updateRegistrationStatus(id, _eventId, status) {
   return { data: data || null, error: toAppError(error) }
 }
 
-/**
- * Reduce a registration's quantity (partial cancellation).
- * newQuantity must be ≥ 1; use deleteRegistration for full cancellation.
- * eventId param is kept for API compatibility with the mock version.
- * @returns {Promise<import('../types').ServiceResult>}
- */
+/** @returns {Promise<import('../types').ServiceResult>} */
 export async function updateRegistrationQuantity(id, _eventId, newQuantity) {
   const { data, error } = await supabase
     .from('registrations')
@@ -310,27 +369,33 @@ export async function updateRegistrationQuantity(id, _eventId, newQuantity) {
   return { data: data || null, error: toAppError(error) }
 }
 
-/** @returns {Promise<import('../types').ServiceResult>} */
+/**
+ * Delete a registration record.
+ * Attempts to remove the payment screenshot from Supabase Storage first.
+ * Storage errors are non-fatal — the DB row is always deleted.
+ * @returns {Promise<import('../types').ServiceResult>}
+ */
 export async function deleteRegistration(id) {
+  // Fetch screenshot URL before deleting the row
+  const { data: reg } = await supabase
+    .from('registrations')
+    .select('payment_screenshot')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (reg?.payment_screenshot) {
+    await deleteStorageFile(reg.payment_screenshot)
+  }
+
   const { error } = await supabase.from('registrations').delete().eq('id', id)
   return { error: toAppError(error) }
 }
 
 /**
  * Promote a waitlisted registration to 'pending'.
- * Validates that the event still has available spots before promoting.
- * Returns { error: { message: 'NO_SPOTS_AVAILABLE' } } if the event is full.
- *
- * Note: this is a read-then-write sequence, not an atomic transaction.
- * For a fully race-safe implementation, use a Postgres function (RPC) instead.
- * TODO: replace with supabase.rpc('promote_waitlisted', { reg_id, event_id })
- *
- * @param {string} id        - registration id to promote
- * @param {string} eventId
- * @returns {Promise<import('../types').ServiceResult>}
+ * Validates available spots before promoting.
  */
 export async function promoteWaitlistedRegistration(id, eventId) {
-  // 1. Fetch event capacity
   const { data: event, error: evErr } = await supabase
     .from('events')
     .select('max_participants')
@@ -338,7 +403,6 @@ export async function promoteWaitlistedRegistration(id, eventId) {
     .single()
   if (evErr) return { data: null, error: toAppError(evErr) }
 
-  // 2. Fetch the target registration's quantity
   const { data: reg, error: regErr } = await supabase
     .from('registrations')
     .select('quantity')
@@ -346,7 +410,6 @@ export async function promoteWaitlistedRegistration(id, eventId) {
     .single()
   if (regErr) return { data: null, error: toAppError(regErr) }
 
-  // 3. Count currently booked spots (exclude rejected + waitlisted)
   const { data: booked, error: bookErr } = await supabase
     .from('registrations')
     .select('quantity')
@@ -360,7 +423,6 @@ export async function promoteWaitlistedRegistration(id, eventId) {
     return { data: null, error: { message: 'NO_SPOTS_AVAILABLE' } }
   }
 
-  // 4. Promote
   const { data, error } = await supabase
     .from('registrations')
     .update({ payment_status: 'pending' })

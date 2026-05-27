@@ -2,27 +2,15 @@ import { useRef, useState } from 'react'
 import { Upload, X } from 'lucide-react'
 import BankInfo from './BankInfo'
 import CopyButton from '../ui/CopyButton'
+import { compressImage } from '../../utils/imageUtils'
 
 /**
  * Step 2 of registration: payment instructions + screenshot upload.
- *
- * Supports:
- *   - Free events (price === 0 or payment_methods is empty)
- *   - Single payment method (wechat or bank)
- *   - Dual payment methods (wechat + bank) → registrant picks one via radio group
- *   - Backward compat: old `payment_method` string field is treated as a 1-element array
- *
- * @param {{
- *   event: import('../../types').BadmintonEvent,
- *   quantity: number,
- *   onSubmit: (screenshot: string | null) => void,
- *   onBack: () => void,
- *   submitting: boolean,
- * }} props
+ * Images are compressed client-side (max 800px wide, JPEG q=0.7) before
+ * being stored as base64 data URLs.
  */
 export default function PaymentStep({ event, quantity, onSubmit, onBack, submitting }) {
   // ── Resolve payment methods ───────────────────────────────────────────────
-  // Support both new (payment_methods array) and old (payment_method string) formats
   const paymentMethods = Array.isArray(event.payment_methods) && event.payment_methods.length > 0
     ? event.payment_methods
     : (event.payment_method && event.payment_method !== 'free' ? [event.payment_method] : [])
@@ -30,27 +18,38 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
   const isFree      = event.price === 0 || paymentMethods.length === 0
   const hasMultiple = paymentMethods.length > 1
 
-  // Default to first available method; user can switch if hasMultiple
   const [paymentChoice, setPaymentChoice] = useState(paymentMethods[0] || 'wechat')
 
-  // Derived: which panels to show
   const showWechat = paymentMethods.includes('wechat') && (!hasMultiple || paymentChoice === 'wechat')
   const showBank   = paymentMethods.includes('bank')   && (!hasMultiple || paymentChoice === 'bank')
 
   // ── Screenshot state ──────────────────────────────────────────────────────
-  const [screenshot, setScreenshot] = useState(null)
-  const [preview, setPreview] = useState(null)
-  const [dragOver, setDragOver] = useState(false)
+  const [screenshot,  setScreenshot]  = useState(null)
+  const [preview,     setPreview]     = useState(null)
+  const [dragOver,    setDragOver]    = useState(false)
+  const [compressing, setCompressing] = useState(false)
   const fileRef = useRef()
 
-  function handleFile(file) {
+  async function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) return
-    const reader = new FileReader()
-    reader.onload = e => {
-      setScreenshot(e.target.result)
-      setPreview(e.target.result)
+    setCompressing(true)
+    try {
+      const dataUrl = await compressImage(file)
+      if (dataUrl) {
+        setScreenshot(dataUrl)
+        setPreview(dataUrl)
+      }
+    } catch {
+      // Fallback: read original without compression
+      const reader = new FileReader()
+      reader.onload = e => {
+        setScreenshot(e.target.result)
+        setPreview(e.target.result)
+      }
+      reader.readAsDataURL(file)
+    } finally {
+      setCompressing(false)
     }
-    reader.readAsDataURL(file)
   }
 
   function handleDrop(e) {
@@ -59,7 +58,8 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
     handleFile(e.dataTransfer.files[0])
   }
 
-  const totalAmount = (event.price * quantity).toFixed(0)
+  const totalAmount  = (event.price * quantity).toFixed(0)
+  const isProcessing = submitting || compressing
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -87,7 +87,7 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
             )}
           </div>
 
-          {/* Payment method selector — only shown when both wechat & bank are available */}
+          {/* Payment method selector */}
           {hasMultiple && (
             <div>
               <p className="text-xs text-gray-400 mb-3">选择支付方式</p>
@@ -110,21 +110,17 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
             </div>
           )}
 
-          {/* ── WeChat panel ─────────────────────────────────────────────── */}
+          {/* WeChat panel */}
           {showWechat && (
             <div className="space-y-4">
-              {!hasMultiple && (
-                <p className="text-xs text-gray-400">微信扫码付款</p>
-              )}
+              {!hasMultiple && <p className="text-xs text-gray-400">微信扫码付款</p>}
 
-              {/* wechat_note — LARGE, BOLD, high-contrast block */}
               {event.wechat_note && (
                 <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 px-5 py-5">
                   <p className="text-[10px] text-amber-500 uppercase tracking-widest font-semibold text-center mb-3">
                     ⚠️ 转账备注 / RMB 金额
                   </p>
-                  {/* break-all prevents long numbers/strings from overflowing on mobile */}
-                  <p className="text-2xl font-bold text-amber-800 text-center break-all leading-snug word-wrap">
+                  <p className="text-2xl font-bold text-amber-800 text-center break-all leading-snug">
                     {event.wechat_note}
                   </p>
                   <div className="flex items-center justify-center gap-2 mt-4">
@@ -134,7 +130,6 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
                 </div>
               )}
 
-              {/* QR code */}
               {event.wechat_qr ? (
                 <div className="flex justify-center">
                   <img
@@ -152,12 +147,10 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
             </div>
           )}
 
-          {/* ── Bank panel ───────────────────────────────────────────────── */}
+          {/* Bank panel */}
           {showBank && (
-            <div className={hasMultiple ? '' : ''}>
-              {!hasMultiple && (
-                <p className="text-xs text-gray-400 mb-3">银行转账 / PayID</p>
-              )}
+            <div>
+              {!hasMultiple && <p className="text-xs text-gray-400 mb-3">银行转账 / PayID</p>}
               <BankInfo event={event} />
             </div>
           )}
@@ -181,17 +174,30 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
               </div>
             ) : (
               <div
-                onClick={() => fileRef.current?.click()}
+                onClick={() => !compressing && fileRef.current?.click()}
                 onDragOver={e => { e.preventDefault(); setDragOver(true) }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
-                  dragOver ? 'border-gray-400 bg-gray-50' : 'border-gray-200 hover:border-gray-300'
+                className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
+                  compressing
+                    ? 'border-gray-200 bg-gray-50 cursor-wait'
+                    : dragOver
+                      ? 'border-gray-400 bg-gray-50 cursor-pointer'
+                      : 'border-gray-200 hover:border-gray-300 cursor-pointer'
                 }`}
               >
-                <Upload size={20} className="mx-auto text-gray-300 mb-2" />
-                <p className="text-sm text-gray-500">点击或拖拽上传截图</p>
-                <p className="text-xs text-gray-300 mt-1">支持 JPG、PNG</p>
+                {compressing ? (
+                  <>
+                    <div className="w-5 h-5 mx-auto mb-2 rounded-full border-2 border-gray-200 border-t-brand animate-spin" />
+                    <p className="text-sm text-gray-400">正在压缩图片…</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={20} className="mx-auto text-gray-300 mb-2" />
+                    <p className="text-sm text-gray-500">点击或拖拽上传截图</p>
+                    <p className="text-xs text-gray-300 mt-1">支持 JPG、PNG（自动压缩）</p>
+                  </>
+                )}
               </div>
             )}
             <input
@@ -207,14 +213,17 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button onClick={onBack} className="btn-secondary px-5 py-3">
+        <button onClick={onBack} disabled={isProcessing} className="btn-secondary px-5 py-3 disabled:opacity-40">
           上一步
         </button>
         <button
           onClick={() => onSubmit(screenshot)}
-          disabled={submitting || (!isFree && !screenshot)}
-          className="btn-primary flex-1 py-3 disabled:opacity-40"
+          disabled={isProcessing || (!isFree && !screenshot)}
+          className="btn-primary flex-1 py-3 disabled:opacity-40 flex items-center justify-center gap-2"
         >
+          {submitting && (
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+          )}
           {submitting ? '提交中…' : isFree ? '确认报名' : '提交审核'}
         </button>
       </div>

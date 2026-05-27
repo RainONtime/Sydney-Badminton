@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback } from 'react'
 import EventCard from '../components/event/EventCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
-import { getEvents, getRegistrationCount } from '../services/dataService'
+import { getEvents } from '../services/dataService'
 
 export default function Home() {
   const [events, setEvents] = useState([])
-  const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError]   = useState('')
 
+  // getEvents now embeds registration_count — no N+1 needed
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -22,15 +22,6 @@ export default function Home() {
     }
 
     setEvents(data)
-
-    // Fetch registration counts in parallel
-    const entries = await Promise.all(
-      data.map(async e => {
-        const { count } = await getRegistrationCount(e.id)
-        return [e.id, count || 0]
-      })
-    )
-    setCounts(Object.fromEntries(entries))
     setLoading(false)
   }, [])
 
@@ -44,12 +35,10 @@ export default function Home() {
       </div>
 
       {loading ? (
-        /* 居中加载视图，min-h 保证首屏不塌陷 */
         <div className="min-h-[50vh] flex items-center justify-center">
           <LoadingSpinner text="正在加载活动..." />
         </div>
       ) : error ? (
-        /* 错误提示 + 重试入口，永远不会死锁转圈 */
         <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4">
           <p className="text-sm text-red-400">{error}</p>
           <button
@@ -66,7 +55,11 @@ export default function Home() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {events.map(event => (
-            <EventCard key={event.id} event={event} registrationCount={counts[event.id] || 0} />
+            <EventCard
+              key={event.id}
+              event={event}
+              registrationCount={event.registration_count ?? 0}
+            />
           ))}
         </div>
       )}
