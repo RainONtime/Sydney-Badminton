@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
-import { Plus, Pencil, Trash2, Users, ArrowUpRight, LogOut } from 'lucide-react'
+import { Plus, Pencil, Trash2, Users, LogOut } from 'lucide-react'
 import { getAdminEvents, deleteEvent, getRegistrationCount } from '../../services/dataService'
 import { getAdminUser, clearAdminUser } from '../../services/authService'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
@@ -118,7 +118,7 @@ export default function AdminEvents() {
           )}
         </div>
       ) : (
-        <div className="card overflow-hidden">
+        <div className="card overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
@@ -161,22 +161,18 @@ export default function AdminEvents() {
                     </span>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex items-center justify-end gap-0.5">
+                    <div className="flex items-center justify-end gap-2">
                       <Link to={`/admin/events/${event.id}/registrations`} title="报名名单"
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-950 hover:bg-gray-100 transition-all">
-                        <Users size={14} />
-                      </Link>
-                      <Link to={`/events/${event.id}`} target="_blank" title="前台预览"
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-950 hover:bg-gray-100 transition-all">
-                        <ArrowUpRight size={14} />
+                        className="p-2 rounded-lg text-gray-400 hover:text-gray-950 hover:bg-gray-100 transition-all">
+                        <Users size={17} />
                       </Link>
                       <Link to={`/admin/events/${event.id}/edit`} title="编辑"
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-950 hover:bg-gray-100 transition-all">
-                        <Pencil size={13} />
+                        className="p-2 rounded-lg text-gray-400 hover:text-gray-950 hover:bg-gray-100 transition-all">
+                        <Pencil size={16} />
                       </Link>
                       <button onClick={() => handleDelete(event.id)} disabled={deleting === event.id} title="删除"
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30">
-                        <Trash2 size={13} />
+                        className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-30">
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

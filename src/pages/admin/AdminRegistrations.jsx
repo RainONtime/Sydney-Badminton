@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Trash2, Download, X, Check, Pencil } from 'lucide-react'
+import { ArrowLeft, Trash2, Download, X, Check, Pencil, Eye } from 'lucide-react'
 import { getEventById, getRegistrationsByEvent, deleteRegistration, updateRegistrationStatus, updateRegistrationQuantity, promoteWaitlistedRegistration } from '../../services/dataService'
 import { getAdminUser } from '../../services/authService'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import StatusBadge from '../../components/ui/StatusBadge'
-import ScreenshotModal from '../../components/admin/ScreenshotModal'
+import RegistrationDetailsModal from '../../components/admin/RegistrationDetailsModal'
 
 const GENDER_LABEL = { male: '男', female: '女', other: '其他' }
 
@@ -19,7 +19,7 @@ export default function AdminRegistrations() {
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState(null)
-  const [screenshot, setScreenshot] = useState(null)
+  const [detailReg, setDetailReg] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [editQty, setEditQty] = useState(1)
   const [promoteError, setPromoteError] = useState('')
@@ -130,7 +130,7 @@ export default function AdminRegistrations() {
 
   return (
     <div className="max-w-4xl mx-auto px-5 py-12">
-      {screenshot && <ScreenshotModal src={screenshot} onClose={() => setScreenshot(null)} />}
+      {detailReg && <RegistrationDetailsModal registration={detailReg} onClose={() => setDetailReg(null)} />}
 
       <Link to="/admin" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-950 mb-8 transition-colors">
         <ArrowLeft size={13} /> 活动管理
@@ -265,6 +265,15 @@ export default function AdminRegistrations() {
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-1">
+                        {/* Always-visible details button */}
+                        <button
+                          onClick={() => setDetailReg(reg)}
+                          className="p-1.5 rounded-lg text-gray-300 hover:text-brand hover:bg-blue-50 transition-all"
+                          title="查看详情"
+                        >
+                          <Eye size={13} />
+                        </button>
+
                         {isWaitlisted && (
                           <>
                             <button
@@ -287,15 +296,6 @@ export default function AdminRegistrations() {
                         )}
                         {isPending && (
                           <>
-                            {reg.payment_screenshot && (
-                              <button
-                                onClick={() => setScreenshot(reg.payment_screenshot)}
-                                disabled={isActing}
-                                className="text-[10px] text-gray-500 hover:text-gray-950 bg-gray-100 hover:bg-gray-200 rounded-lg px-2 py-1 transition-all disabled:opacity-30"
-                              >
-                                截图
-                              </button>
-                            )}
                             <button
                               onClick={() => handleConfirm(reg)}
                               disabled={isActing}

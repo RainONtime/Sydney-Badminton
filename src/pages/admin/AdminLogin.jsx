@@ -8,20 +8,6 @@ import { adminLogin } from '../../services/dataService'
 const useMock = !import.meta.env.VITE_SUPABASE_URL ||
   import.meta.env.VITE_SUPABASE_URL === 'https://placeholder.supabase.co'
 
-function ShuttlecockIcon({ className }) {
-  return (
-    <svg className={className} width="20" height="22" viewBox="0 0 16 18" fill="none">
-      <circle cx="8" cy="15.5" r="2.2" fill="currentColor" />
-      <line x1="8" y1="13.3" x2="8" y2="8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <line x1="8" y1="8.5" x2="1.5" y2="2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-      <line x1="8" y1="8.5" x2="4.5" y2="1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-      <line x1="8" y1="8.5" x2="8" y2="0.8" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-      <line x1="8" y1="8.5" x2="11.5" y2="1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-      <line x1="8" y1="8.5" x2="14.5" y2="2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-      <path d="M1.5 2 Q8 -0.5 14.5 2" stroke="currentColor" strokeWidth="0.9" fill="none" strokeLinecap="round" />
-    </svg>
-  )
-}
 
 export default function AdminLogin() {
   const [password, setPassword]     = useState('')
@@ -62,8 +48,11 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center px-5">
       <div className="w-full max-w-xs">
 
-        <div className="flex items-center gap-2 mb-10">
-          <ShuttlecockIcon className="text-gray-950" />
+        <div className="flex flex-col items-center mb-10">
+          <div
+            className="w-16 h-16 rounded-full bg-brand mb-4"
+            style={{ backgroundImage: 'url(/shuttlecock.png)', backgroundSize: '190%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
+          />
           <span className="font-semibold text-sm tracking-tight text-gray-950">Duoduo Badminton</span>
         </div>
 
