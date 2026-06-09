@@ -8,10 +8,11 @@ import { getUserProfile, updateUserProfile } from '../services/dataService'
 const LEVEL_OPTIONS = ['1', '2', '3', '4', '5', '6']
 
 const EMPTY_PROFILE = {
-  display_name: '',
-  gender: '',
-  skill_level: '',
-  contact_info: '',
+  display_name:   '',
+  gender:         '',
+  skill_level:    '',
+  contact_info:   '',
+  refund_account: '',
 }
 
 export default function Profile() {
@@ -53,10 +54,11 @@ export default function Profile() {
 
       if (data) {
         setProfile({
-          display_name: data.display_name || '',
-          gender:       data.gender       || '',
-          skill_level:  data.skill_level  || '',
-          contact_info: data.contact_info || '',
+          display_name:   data.display_name   || '',
+          gender:         data.gender         || '',
+          skill_level:    data.skill_level    || '',
+          contact_info:   data.contact_info   || '',
+          refund_account: data.refund_account || '',
         })
       }
       setLoading(false)
@@ -84,10 +86,11 @@ export default function Profile() {
     setFeedback('')
 
     const { error } = await updateUserProfile(userId, {
-      display_name: profile.display_name.trim() || null,
-      gender:       profile.gender       || null,
-      skill_level:  profile.skill_level  || null,
-      contact_info: profile.contact_info.trim() || null,
+      display_name:   profile.display_name.trim()   || null,
+      gender:         profile.gender                || null,
+      skill_level:    profile.skill_level           || null,
+      contact_info:   profile.contact_info.trim()   || null,
+      refund_account: profile.refund_account.trim() || null,
     })
 
     setSaving(false)
@@ -191,10 +194,11 @@ export default function Profile() {
                   />
                 </div>
 
-                {/* Gender */}
+                {/* Gender — required */}
                 <div>
                   <label className="block text-xs text-gray-400 mb-1.5">
                     {t('profile.gender')}
+                    <span className="text-rose-500 text-xs ml-1 font-medium">(必填)</span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {GENDER_OPTIONS.map(opt => (
@@ -229,10 +233,11 @@ export default function Profile() {
                   )}
                 </div>
 
-                {/* Skill level */}
+                {/* Skill level — optional */}
                 <div>
                   <label className="block text-xs text-gray-400 mb-1.5">
                     {t('profile.skillLevel')}
+                    <span className="text-gray-400 text-xs ml-1">(选填)</span>
                   </label>
                   <select
                     className="input-field text-base"
@@ -247,10 +252,11 @@ export default function Profile() {
                   </select>
                 </div>
 
-                {/* Contact info */}
+                {/* Contact info — required */}
                 <div>
                   <label className="block text-xs text-gray-400 mb-1.5">
                     {t('profile.contactInfo')}
+                    <span className="text-rose-500 text-xs ml-1 font-medium">(必填)</span>
                   </label>
                   <input
                     className="input-field text-base"
@@ -262,6 +268,25 @@ export default function Profile() {
                   />
                   <p className="text-[11px] text-gray-300 mt-1.5">
                     {t('profile.contactInfoHint')}
+                  </p>
+                </div>
+
+                {/* Refund account — optional */}
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1.5">
+                    {t('profile.refundAccount')}
+                    <span className="text-gray-400 text-xs ml-1">(选填)</span>
+                  </label>
+                  <input
+                    className="input-field text-base"
+                    name="refund_account"
+                    value={profile.refund_account}
+                    onChange={handleChange}
+                    placeholder={t('profile.refundAccountPlaceholder')}
+                    autoComplete="off"
+                  />
+                  <p className="text-[11px] text-gray-300 mt-1.5">
+                    {t('profile.refundAccountHint')}
                   </p>
                 </div>
 

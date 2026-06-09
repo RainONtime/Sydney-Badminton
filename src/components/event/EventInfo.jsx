@@ -17,14 +17,14 @@ export default function EventInfo({ event, spotsLeft, isFull }) {
     <div className="mb-6">
       {/* ── 核心信息卡片 ─────────────────────────────────── */}
       <div
-        className="bg-white rounded-[2rem] p-6 mb-4"
+        className="bg-white rounded-[2rem] p-4 sm:p-6 mb-3 sm:mb-4"
         style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.03)', border: '1px solid rgba(249,168,212,0.2)' }}
       >
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-5 leading-tight" style={{ color: '#4B4552' }}>
+        <h1 className="text-xl sm:text-3xl font-bold tracking-tight mb-3 sm:mb-5 leading-tight" style={{ color: '#4B4552' }}>
           {displayTitle}
         </h1>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5 text-sm">
+        <div className="grid grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3 sm:gap-y-5 text-sm">
           <div>
             <p className="text-[11px] text-slate-400 mb-1 uppercase tracking-wide">{t('event.timeLabel')}</p>
             <p className="font-bold text-slate-700">{dateStr}</p>
@@ -55,32 +55,25 @@ export default function EventInfo({ event, spotsLeft, isFull }) {
         </div>
 
         {displayDesc && (
-          <p className="text-sm text-slate-500 leading-relaxed mt-5">{displayDesc}</p>
+          <p className="text-sm text-slate-500 leading-relaxed mt-3 sm:mt-5">{displayDesc}</p>
         )}
       </div>
 
-      {/* ── 组织者信息 ────────────────────────────────────── */}
+      {/* ── 组织者信息（紧凑单行卡片）────────────────────── */}
       {(event.organizer || event.organizer_wechat) && (
-        <div className="bg-amber-50 rounded-2xl px-4 py-3.5">
-          <div className="flex items-start gap-2.5">
-            <User size={14} className="text-amber-400 mt-0.5 shrink-0" strokeWidth={2.5} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                {event.organizer && (
-                  <span className="text-xs text-amber-700">
-                    {t('event.organizer')}：<span className="font-semibold text-amber-800">{event.organizer}</span>
-                  </span>
-                )}
-                {event.organizer_wechat && (
-                  <span className="text-xs text-amber-600">
-                    {t('event.wechat')}：<span className="font-semibold text-amber-800 select-all">{event.organizer_wechat}</span>
-                  </span>
-                )}
-              </div>
+        <div className="bg-amber-50 rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5">
+          <div className="flex items-center gap-2">
+            <User size={13} className="text-amber-400 shrink-0" strokeWidth={2.5} />
+            <div className="flex items-center gap-2.5 flex-wrap min-w-0">
+              {event.organizer && (
+                <span className="text-xs text-amber-700">
+                  {t('event.organizer')}：<span className="font-semibold text-amber-800">{event.organizer}</span>
+                </span>
+              )}
               {event.organizer_wechat && (
-                <p className="text-xs text-amber-500 mt-1.5 leading-relaxed">
-                  {t('event.cancelNote')}
-                </p>
+                <span className="text-xs text-amber-600">
+                  {t('event.wechat')}：<span className="font-semibold text-amber-800 select-all">{event.organizer_wechat}</span>
+                </span>
               )}
             </div>
           </div>

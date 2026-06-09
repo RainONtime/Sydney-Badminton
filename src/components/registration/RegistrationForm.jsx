@@ -103,27 +103,34 @@ export default function RegistrationForm({
 
             {error && <p className="text-xs text-rose-400">{error}</p>}
 
-            {/* Submit — directly below the card, no other fields */}
-            <button
-              type="submit"
-              disabled={isSubmitting || isProfileIncomplete}
-              className={`w-full py-3.5 text-base disabled:opacity-50 flex items-center justify-center gap-2 ${
-                isWaitlisted ? 'btn-secondary border-2 border-dashed border-violet-200' : 'btn-primary'
-              } ${isProfileIncomplete ? 'cursor-not-allowed' : ''}`}
+            {/* Submit — sticky on mobile, static on sm+ */}
+            <div
+              className="fixed bottom-0 left-0 right-0 z-50 p-4
+                         bg-white/95 backdrop-blur-md border-t border-violet-100 shadow-[0_-8px_20px_rgba(0,0,0,0.04)]
+                         sm:static sm:bg-transparent sm:border-none sm:shadow-none sm:!p-0"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
             >
-              {isSubmitting && (
-                <span className={`w-4 h-4 rounded-full border-2 animate-spin ${
-                  isWaitlisted ? 'border-violet-200 border-t-violet-500' : 'border-white/40 border-t-white'
-                }`} />
-              )}
-              {isSubmitting
-                ? t('common.submitting')
-                : isWaitlisted
-                  ? t('form.joinWaitlist')
-                  : event.price > 0 && event.payment_methods?.length > 0
-                    ? t('form.nextPayment')
-                    : t('form.confirm')}
-            </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || isProfileIncomplete}
+                className={`w-full py-3.5 text-base disabled:opacity-50 flex items-center justify-center gap-2 ${
+                  isWaitlisted ? 'btn-secondary border-2 border-dashed border-violet-200' : 'btn-primary'
+                } ${isProfileIncomplete ? 'cursor-not-allowed' : ''}`}
+              >
+                {isSubmitting && (
+                  <span className={`w-4 h-4 rounded-full border-2 animate-spin ${
+                    isWaitlisted ? 'border-violet-200 border-t-violet-500' : 'border-white/40 border-t-white'
+                  }`} />
+                )}
+                {isSubmitting
+                  ? t('common.submitting')
+                  : isWaitlisted
+                    ? t('form.joinWaitlist')
+                    : event.price > 0 && event.payment_methods?.length > 0
+                      ? t('form.nextPayment')
+                      : t('form.confirm')}
+              </button>
+            </div>
           </>
 
         ) : (
@@ -209,26 +216,34 @@ export default function RegistrationForm({
 
             {error && <p className="text-xs text-rose-400">{error}</p>}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`w-full py-3.5 text-base disabled:opacity-50 flex items-center justify-center gap-2 ${
-                isWaitlisted ? 'btn-secondary border-2 border-dashed border-violet-200' : 'btn-primary'
-              }`}
+            {/* Submit — sticky on mobile, static on sm+ */}
+            <div
+              className="fixed bottom-0 left-0 right-0 z-50 p-4
+                         bg-white/95 backdrop-blur-md border-t border-violet-100 shadow-[0_-8px_20px_rgba(0,0,0,0.04)]
+                         sm:static sm:bg-transparent sm:border-none sm:shadow-none sm:!p-0"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
             >
-              {isSubmitting && (
-                <span className={`w-4 h-4 rounded-full border-2 animate-spin ${
-                  isWaitlisted ? 'border-violet-200 border-t-violet-500' : 'border-white/40 border-t-white'
-                }`} />
-              )}
-              {isSubmitting
-                ? t('common.submitting')
-                : isWaitlisted
-                  ? t('form.joinWaitlist')
-                  : event.price > 0 && event.payment_methods?.length > 0
-                    ? t('form.nextPayment')
-                    : t('form.confirm')}
-            </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full py-3.5 text-base disabled:opacity-50 flex items-center justify-center gap-2 ${
+                  isWaitlisted ? 'btn-secondary border-2 border-dashed border-violet-200' : 'btn-primary'
+                }`}
+              >
+                {isSubmitting && (
+                  <span className={`w-4 h-4 rounded-full border-2 animate-spin ${
+                    isWaitlisted ? 'border-violet-200 border-t-violet-500' : 'border-white/40 border-t-white'
+                  }`} />
+                )}
+                {isSubmitting
+                  ? t('common.submitting')
+                  : isWaitlisted
+                    ? t('form.joinWaitlist')
+                    : event.price > 0 && event.payment_methods?.length > 0
+                      ? t('form.nextPayment')
+                      : t('form.confirm')}
+              </button>
+            </div>
           </>
         )}
 

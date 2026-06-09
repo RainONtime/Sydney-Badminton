@@ -182,17 +182,17 @@ export default function AdminRegistrations() {
         </div>
       ) : (
         <div className="card overflow-x-auto pb-1">
-          <table className="w-full min-w-[600px]">
+          <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 w-8">{t('admin.registrations.columns.index')}</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400">{t('admin.registrations.columns.name')}</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 hidden sm:table-cell">{t('admin.registrations.columns.gender')}</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 hidden sm:table-cell">{t('admin.registrations.columns.level')}</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-400">{t('admin.registrations.columns.quantity')}</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">{t('admin.registrations.columns.status')}</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 hidden lg:table-cell">{t('admin.registrations.columns.notes')}</th>
-                <th className="px-4 py-3 text-xs font-medium text-gray-400 text-right">{t('admin.registrations.columns.actions')}</th>
+                <th className="text-left px-2 py-3 text-xs font-medium text-gray-400 w-8">{t('admin.registrations.columns.index')}</th>
+                <th className="text-left px-2 py-3 text-xs font-medium text-gray-400">{t('admin.registrations.columns.name')}</th>
+                <th className="text-left px-2 py-3 text-xs font-medium text-gray-400 hidden sm:table-cell">{t('admin.registrations.columns.gender')}</th>
+                <th className="text-left px-2 py-3 text-xs font-medium text-gray-400 hidden sm:table-cell">{t('admin.registrations.columns.level')}</th>
+                <th className="text-center px-2 py-3 text-xs font-medium text-gray-400">{t('admin.registrations.columns.quantity')}</th>
+                <th className="text-left px-2 py-3 text-xs font-medium text-gray-400">{t('admin.registrations.columns.status')}</th>
+                <th className="text-left px-2 py-3 text-xs font-medium text-gray-400 hidden lg:table-cell">{t('admin.registrations.columns.notes')}</th>
+                <th className="px-2 py-3 text-xs font-medium text-gray-400 text-right whitespace-nowrap">{t('admin.registrations.columns.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -206,20 +206,20 @@ export default function AdminRegistrations() {
                     key={reg.id}
                     className={`${idx < registrations.length - 1 ? 'border-b border-gray-100' : ''} ${isPending ? 'bg-amber-50/40' : isWaitlisted ? 'bg-purple-50/40' : 'hover:bg-gray-50'} transition-colors`}
                   >
-                    <td className="px-5 py-3.5 text-xs text-gray-300">{idx + 1}</td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-2 py-3.5 text-xs text-gray-300">{idx + 1}</td>
+                    <td className="px-2 py-3.5 whitespace-nowrap">
                       <span className="text-sm font-medium" style={{ color: '#4B4552' }}>{reg.name}</span>
                       {(reg.quantity || 1) > 1 && (
                         <span className="text-xs text-gray-400 ml-1">×{reg.quantity}</span>
                       )}
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-gray-500 hidden sm:table-cell">
+                    <td className="px-2 py-3.5 text-sm text-gray-500 hidden sm:table-cell">
                       {genderKey ? t(`admin.registrations.gender.${genderKey}`) : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-gray-500 hidden sm:table-cell">
+                    <td className="px-2 py-3.5 text-sm text-gray-500 hidden sm:table-cell">
                       {reg.skill_level ? `${reg.skill_level} 级` : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-center">
+                    <td className="px-2 py-3.5 text-sm text-center">
                       {editingId === reg.id ? (
                         <div className="flex items-center justify-center gap-1">
                           <select
@@ -267,13 +267,13 @@ export default function AdminRegistrations() {
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-2 py-3.5">
                       <StatusBadge status={reg.payment_status} />
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-gray-400 hidden lg:table-cell max-w-[160px] truncate">
+                    <td className="px-2 py-3.5 text-sm text-gray-400 hidden lg:table-cell max-w-[160px] truncate">
                       {reg.notes || <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-2 py-3.5 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setDetailReg(reg)}

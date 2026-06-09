@@ -9,6 +9,7 @@ import {
   deleteRegistration,
   getUserProfile,
   getUserRegistrationForEvent,
+  updateUserProfile,
 } from '../services/dataService'
 import { getSession } from '../services/authService'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
@@ -57,9 +58,12 @@ export default function EventPage() {
   const [myRegistration, setMyRegistration] = useState(null)
 
   // ── Cancel flow ────────────────────────────────────────────────────────
-  const [confirmCancel, setConfirmCancel] = useState(false)
-  const [cancelling, setCancelling]       = useState(false)
-  const [cancelError, setCancelError]     = useState('')
+  const [confirmCancel,   setConfirmCancel]   = useState(false)
+  const [cancelling,      setCancelling]      = useState(false)
+  const [cancelError,     setCancelError]     = useState('')
+  // Refund modal — shown when cancelling ≥ 24 h before event
+  const [showRefundModal, setShowRefundModal] = useState(false)
+  const [refundAccount,   setRefundAccount]   = useState('')
 
   // ── Load everything in one shot ────────────────────────────────────────
   useEffect(() => {
@@ -219,35 +223,114 @@ export default function EventPage() {
 
   /* ── Cancel registration handlers ────────────────────────────────────── */
 
+  /** Shared teardown after a successful cancellation. */
+  function afterCancel() {
+    setRegistrations(r => r.filter(reg => reg.id !== myRegistration.id))
+    setMyRegistration(null)
+    setConfirmCancel(false)
+    setShowRefundModal(false)
+    setStep(1)
+    setForm(formFromProfile(userProfile))
+  }
+
+  /** Used for the < 24 h hard-cancel path (no refund collected). */
   async function handleCancelRegistration() {
     if (!myRegistration) return
     setCancelling(true)
     setCancelError('')
+    const { error } = await deleteRegistration(myRegistration.id)
+    setCancelling(false)
+    if (error) { setCancelError('取消失败，请稍后重试'); return }
+    afterCancel()
+  }
+
+  /** Used for the ≥ 24 h refund-modal path.
+   *  Saves the refund account to user_profiles (best-effort) then cancels. */
+  async function handleCancelWithRefund() {
+    if (!myRegistration) return
+    setCancelling(true)
+    setCancelError('')
+
+    // Persist refund account to profile (silent if user not logged in)
+    if (session?.user && refundAccount.trim()) {
+      await updateUserProfile(session.user.id, { refund_account: refundAccount.trim() })
+    }
 
     const { error } = await deleteRegistration(myRegistration.id)
     setCancelling(false)
+    if (error) { setCancelError('取消失败，请稍后重试'); return }
+    afterCancel()
+  }
 
-    if (error) {
-      setCancelError('取消失败，请稍后重试')
-      return
+  /** Opens the right cancel UI depending on event proximity. */
+  function initiateCancelFlow() {
+    setCancelError('')
+    if (hoursUntilEvent() < 24) {
+      // < 24 h: warn immediately, skip refund collection
+      setConfirmCancel(true)
+    } else {
+      // ≥ 24 h: collect refund account first
+      setRefundAccount(userProfile?.refund_account || '')
+      setShowRefundModal(true)
     }
-
-    // Update local state — release the spot and allow re-registration
-    setRegistrations(r => r.filter(reg => reg.id !== myRegistration.id))
-    setMyRegistration(null)
-    setConfirmCancel(false)
-    setStep(1)
-    setForm(formFromProfile(userProfile))
   }
 
   /* ── Render ──────────────────────────────────────────────────────────── */
 
   return (
     <div className="min-h-screen">
-      <div
-        className="max-w-2xl mx-auto px-4 sm:px-5 py-6 sm:py-12"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 24px)' }}
-      >
+
+      {/* ── Refund modal — ≥ 24 h cancellation with refund account collection ── */}
+      {showRefundModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+          <div
+            className="w-full max-w-md bg-white rounded-[2rem] p-6"
+            style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.14)' }}
+          >
+            <h3 className="text-base font-bold mb-1" style={{ color: '#4B4552' }}>
+              申请取消与退款
+            </h3>
+            <p className="text-xs text-gray-400 mb-5 leading-relaxed">
+              您的名额将被释放。请填写 PayID 或 BSB/Account，活动结束后组织者将统一为您退款。
+            </p>
+            <input
+              type="text"
+              placeholder="例：0412345678 (PayID) 或 BSB 062-XXX / Acc 123456"
+              className="input-field text-sm w-full mb-1"
+              value={refundAccount}
+              onChange={e => setRefundAccount(e.target.value)}
+              autoFocus
+            />
+            <p className="text-[11px] text-gray-300 mb-5">留空也可提交，组织者会联系你确认</p>
+
+            {cancelError && (
+              <p className="text-xs text-rose-400 mb-3">{cancelError}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowRefundModal(false); setCancelError('') }}
+                disabled={cancelling}
+                className="flex-1 py-3 text-sm rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-40"
+              >
+                暂不取消
+              </button>
+              <button
+                onClick={handleCancelWithRefund}
+                disabled={cancelling}
+                className="flex-1 py-3 text-sm rounded-full font-semibold text-white bg-rose-500 hover:bg-rose-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {cancelling && (
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                )}
+                {cancelling ? '处理中…' : '确认取消'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-2xl mx-auto px-4 sm:px-5 py-6 sm:py-12 pb-28">
         <Link
           to="/"
           className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-violet-400 mb-6 sm:mb-8 transition-colors"
@@ -263,11 +346,16 @@ export default function EventPage() {
         <div className="mb-10">
 
           {!session ? (
-            /* ── Login gate — button-first, ghost hint below ────────── */
-            <div className="py-6 w-full flex flex-col items-center justify-center gap-3">
+            /* ── Login gate — sticky on mobile, static on sm+ ──────── */
+            <div
+              className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center gap-2 p-4
+                         bg-white/95 backdrop-blur-md border-t border-violet-100 shadow-[0_-8px_20px_rgba(0,0,0,0.04)]
+                         sm:static sm:bg-transparent sm:border-none sm:shadow-none sm:!p-0 sm:mt-6"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+            >
               <button
                 onClick={() => navigate('/login')}
-                className="w-full sm:w-72 py-3.5 rounded-full text-white font-bold text-base
+                className="w-full py-3.5 rounded-full text-white font-bold text-base
                            transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5
                            hover:shadow-md active:scale-95"
                 style={{ background: 'linear-gradient(to right, #A88BFA, #F472B6)' }}
@@ -333,22 +421,17 @@ export default function EventPage() {
 
               {!confirmCancel ? (
                 <button
-                  onClick={() => setConfirmCancel(true)}
+                  onClick={initiateCancelFlow}
                   className="w-full py-2.5 text-xs rounded-full font-medium bg-rose-50 text-rose-500 hover:bg-rose-100 transition-colors"
                 >
                   取消报名
                 </button>
               ) : (
+                /* Inline dialog — only shown for < 24h hard-cancel path */
                 <div className="rounded-2xl border border-rose-100 bg-rose-50/40 px-4 py-4">
-                  {hoursUntilEvent() < 24 ? (
-                    <p className="text-xs text-center font-semibold mb-3" style={{ color: '#ef4444' }}>
-                      ⚠️ 距离活动开始不足 24 小时，此时取消将【无法退款】。是否确认取消并释放名额？
-                    </p>
-                  ) : (
-                    <p className="text-xs text-center text-gray-500 mb-3">
-                      确认取消此次报名？名额将立即释放，此操作不可撤回。
-                    </p>
-                  )}
+                  <p className="text-xs text-center font-semibold mb-3" style={{ color: '#ef4444' }}>
+                    ⚠️ 距离活动开始不足 24 小时，此时取消将【无法退款】。是否确认取消并释放名额？
+                  </p>
                   <div className="flex gap-2">
                     <button
                       onClick={handleCancelRegistration}

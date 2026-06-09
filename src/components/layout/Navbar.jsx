@@ -53,12 +53,12 @@ export default function Navbar() {
         paddingTop: 'env(safe-area-inset-top, 0px)',
       }}
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-5 flex items-center justify-between" style={{ height: 54 }}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-5 flex items-center justify-between h-11 sm:h-[54px]">
 
         {/* Brand mark + home link */}
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-2.5 select-none">
-            <img src="/logo.png" alt="Duoduo Badminton" className="w-9 h-9 shrink-0 transition-transform duration-300 hover:scale-110" />
+            <img src="/logo.png" alt="Duoduo Badminton" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 transition-transform duration-300 hover:scale-110" />
             <div className="hidden sm:block leading-none">
               <p className="leading-none" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.01em', color: '#4B4552' }}>
                 DUODUO
