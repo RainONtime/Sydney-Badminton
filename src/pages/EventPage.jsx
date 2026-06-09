@@ -290,8 +290,10 @@ export default function EventPage() {
             <h3 className="text-base font-bold mb-1" style={{ color: '#4B4552' }}>
               申请取消与退款
             </h3>
-            <p className="text-xs text-gray-400 mb-5 leading-relaxed">
-              您的名额将被释放。请填写 PayID 或 BSB/Account，活动结束后组织者将统一为您退款。
+            <p className="text-sm text-slate-600 mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">
+              您的名额将被释放。请填写您的 PayID 或银行账号。
+              <br />
+              <span className="font-bold text-rose-500">为方便管理，我们将于活动结束后统一处理退款</span>，感谢您的理解与配合。
             </p>
             <input
               type="text"
