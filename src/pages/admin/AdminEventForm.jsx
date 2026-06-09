@@ -13,7 +13,7 @@ import QRUpload from '../../components/admin/QRUpload'
 
 const EMPTY_FORM = {
   title: '', title_en: '', description: '', description_en: '', date: '', start_time: '', end_time: '',
-  location: '', max_participants: 20, price: 0, status: 'active',
+  location: '', max_participants: 20, price: '', status: 'active',
   organizer_id: '',
   organizer: '',
   organizer_wechat: '',
@@ -68,7 +68,9 @@ export default function AdminEventForm() {
     const { name, value } = e.target
     setForm(f => ({
       ...f,
-      [name]: name === 'max_participants' || name === 'price' ? Number(value) : value,
+      // price stays as a string while editing (avoids leading-zero "020" issue);
+      // max_participants is always an integer so convert immediately
+      [name]: name === 'max_participants' ? Number(value) : value,
     }))
   }
 
@@ -118,7 +120,11 @@ export default function AdminEventForm() {
     setSaving(true)
     setError('')
 
-    const payload = { ...form }
+    const payload = {
+      ...form,
+      // Convert price string → number at submit time; empty string → 0 (free event)
+      price: form.price === '' ? 0 : parseFloat(form.price) || 0,
+    }
     delete payload.id
     delete payload.created_at
 
@@ -230,9 +236,9 @@ export default function AdminEventForm() {
           <p className="text-[11px] text-gray-300 mt-1.5">切换英文界面时展示，留空则自动显示中文描述</p>
         </div>
 
-        {/* Date / Time */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="col-span-3 sm:col-span-1">
+        {/* Date / Time — stack vertically on mobile, 3 columns on sm+ */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
             <label className="block text-xs text-gray-400 mb-1.5">日期 *</label>
             <input className="input-field" type="date" name="date" value={form.date} onChange={handleChange} />
           </div>

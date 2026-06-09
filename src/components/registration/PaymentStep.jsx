@@ -4,11 +4,13 @@ import { Upload, X } from 'lucide-react'
 import BankInfo from './BankInfo'
 import CopyButton from '../ui/CopyButton'
 import { compressImage } from '../../utils/imageUtils'
+import { uploadPaymentScreenshot } from '../../services/dataService'
 
 /**
  * Step 2 of registration: payment instructions + screenshot upload.
- * Images are compressed client-side (max 800px wide, JPEG q=0.7) before
- * being stored as base64 data URLs.
+ * Images are compressed client-side for preview, then the original File is
+ * uploaded to Supabase Storage (bucket: payment_screenshots). The resulting
+ * public URL (not a base64 string) is passed to onSubmit().
  */
 export default function PaymentStep({ event, quantity, onSubmit, onBack, submitting }) {
   const { t } = useTranslation()
@@ -27,14 +29,19 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
   const showBank   = paymentMethods.includes('bank')   && (!hasMultiple || paymentChoice === 'bank')
 
   // ── Screenshot state ──────────────────────────────────────────────────────
-  const [screenshot,  setScreenshot]  = useState(null)
-  const [preview,     setPreview]     = useState(null)
-  const [dragOver,    setDragOver]    = useState(false)
-  const [compressing, setCompressing] = useState(false)
+  const [screenshot,   setScreenshot]  = useState(null)  // base64 — preview only
+  const [rawFile,      setRawFile]     = useState(null)   // original File — for Storage upload
+  const [preview,      setPreview]     = useState(null)
+  const [dragOver,     setDragOver]    = useState(false)
+  const [compressing,  setCompressing] = useState(false)
+  const [uploading,    setUploading]   = useState(false)
+  const [uploadError,  setUploadError] = useState('')
   const fileRef = useRef()
 
   async function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) return
+    setRawFile(file)        // keep original for Storage upload
+    setUploadError('')
     setCompressing(true)
     try {
       const dataUrl = await compressImage(file)
@@ -43,7 +50,7 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
         setPreview(dataUrl)
       }
     } catch {
-      // Fallback: read original without compression
+      // Fallback: read original without compression (preview only)
       const reader = new FileReader()
       reader.onload = e => {
         setScreenshot(e.target.result)
@@ -55,6 +62,24 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
     }
   }
 
+  async function handleSubmit() {
+    if (isFree || !rawFile) {
+      // Free event — no upload needed
+      onSubmit(null)
+      return
+    }
+    setUploading(true)
+    setUploadError('')
+    try {
+      const publicUrl = await uploadPaymentScreenshot(rawFile, event.id)
+      onSubmit(publicUrl)
+    } catch (err) {
+      setUploadError(err.message || '截图上传失败，请重试')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   function handleDrop(e) {
     e.preventDefault()
     setDragOver(false)
@@ -62,7 +87,7 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
   }
 
   const totalAmount  = (event.price * quantity).toFixed(0)
-  const isProcessing = submitting || compressing
+  const isProcessing = submitting || compressing || uploading
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -169,7 +194,7 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
                   className="w-full max-h-64 object-contain rounded-2xl border border-gray-200 bg-gray-50"
                 />
                 <button
-                  onClick={() => { setScreenshot(null); setPreview(null) }}
+                  onClick={() => { setScreenshot(null); setPreview(null); setRawFile(null); setUploadError('') }}
                   className="absolute top-2 right-2 w-7 h-7 bg-gray-950/70 text-white rounded-full flex items-center justify-center hover:bg-gray-950 transition-colors"
                 >
                   <X size={13} />
@@ -214,24 +239,31 @@ export default function PaymentStep({ event, quantity, onSubmit, onBack, submitt
         </>
       )}
 
+      {/* Upload error */}
+      {uploadError && (
+        <p className="text-xs text-rose-500 text-center -mt-2 font-medium">{uploadError}</p>
+      )}
+
       {/* Actions */}
       <div className="flex gap-3">
         <button onClick={onBack} disabled={isProcessing} className="btn-secondary px-5 py-3 disabled:opacity-40">
           {t('common.back')}
         </button>
         <button
-          onClick={() => onSubmit(screenshot)}
+          onClick={handleSubmit}
           disabled={isProcessing || (!isFree && !screenshot)}
           className="btn-primary flex-1 py-3 disabled:opacity-40 flex items-center justify-center gap-2"
         >
-          {submitting && (
+          {(submitting || uploading) && (
             <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
           )}
-          {submitting
-            ? t('common.submitting')
-            : isFree
-              ? t('form.confirm')
-              : t('payment.submitForReview')}
+          {uploading
+            ? '上传中…'
+            : submitting
+              ? t('common.submitting')
+              : isFree
+                ? t('form.confirm')
+                : t('payment.submitForReview')}
         </button>
       </div>
     </div>

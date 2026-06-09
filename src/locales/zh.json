@@ -13,7 +13,8 @@
     "logout": "退出",
     "adminLogin": "组织者登录",
     "login": "登录",
-    "myProfile": "主页"
+    "home": "主页",
+    "myProfile": "个人信息"
   },
   "home": {
     "title": "活动",
@@ -41,7 +42,8 @@
     "loadError": "加载失败，请刷新重试",
     "notFound": "活动不存在或已删除",
     "backToHome": "← 返回首页",
-    "backToAll": "← 返回"
+    "backToAll": "← 返回",
+    "loginRequiredSimple": "请先登录以保存报名信息"
   },
   "form": {
     "title": "报名",
@@ -64,7 +66,8 @@
     "errorGender": "请选择性别",
     "errorSpots_one": "剩余名额不足，当前仅剩 {{count}} 个",
     "errorSpots_other": "剩余名额不足，当前仅剩 {{count}} 个",
-    "errorSubmit": "提交失败，请稍后重试"
+    "errorSubmit": "提交失败，请稍后重试",
+    "incompleteProfileHint": "您的资料缺失，请先前往右上角「个人信息」完善。"
   },
   "success": {
     "waitlistTitle": "已加入候补名单",

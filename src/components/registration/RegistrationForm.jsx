@@ -39,8 +39,12 @@ export default function RegistrationForm({
     { value: 'other',  label: t('form.other')  },
   ]
 
-  // Show the compact summary card when the profile has enough info to skip manual entry
-  const hasProfileSummary = Boolean(profile?.display_name && profile?.gender)
+  // Show the compact summary card whenever display_name exists — gender is optional
+  const hasProfileSummary = Boolean(profile?.display_name)
+
+  // Profile is usable for registration only when gender is also set.
+  // If gender is missing, we still show the card but block submission with a hint.
+  const isProfileIncomplete = hasProfileSummary && !profile?.gender
 
   return (
     <div>
@@ -70,6 +74,11 @@ export default function RegistrationForm({
                 </p>
                 <p className="text-sm font-semibold truncate" style={{ color: '#4B4552' }}>
                   👤 {profile.display_name}
+                  {profile.gender && (
+                    <span className="font-normal text-gray-400">
+                      {' | '}{t(`form.${profile.gender}`)}
+                    </span>
+                  )}
                 </p>
               </div>
 
@@ -85,15 +94,22 @@ export default function RegistrationForm({
               )}
             </div>
 
+            {/* Profile incomplete warning — shown when gender is missing */}
+            {isProfileIncomplete && (
+              <p className="text-rose-500 text-sm font-medium px-1">
+                ⚠️ {t('form.incompleteProfileHint')}
+              </p>
+            )}
+
             {error && <p className="text-xs text-rose-400">{error}</p>}
 
             {/* Submit — directly below the card, no other fields */}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isProfileIncomplete}
               className={`w-full py-3.5 text-base disabled:opacity-50 flex items-center justify-center gap-2 ${
                 isWaitlisted ? 'btn-secondary border-2 border-dashed border-violet-200' : 'btn-primary'
-              }`}
+              } ${isProfileIncomplete ? 'cursor-not-allowed' : ''}`}
             >
               {isSubmitting && (
                 <span className={`w-4 h-4 rounded-full border-2 animate-spin ${

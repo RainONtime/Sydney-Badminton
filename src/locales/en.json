@@ -13,6 +13,7 @@
     "logout": "Log out",
     "adminLogin": "Organiser Login",
     "login": "Login",
+    "home": "Home",
     "myProfile": "Profile"
   },
   "home": {
@@ -41,7 +42,8 @@
     "loadError": "Something went wrong. Please refresh.",
     "notFound": "Event not found or has been removed.",
     "backToHome": "← Back to events",
-    "backToAll": "← Back"
+    "backToAll": "← Back",
+    "loginRequiredSimple": "Please log in to save your registration"
   },
   "form": {
     "title": "RSVP",
@@ -64,7 +66,8 @@
     "errorGender": "Please select your gender",
     "errorSpots_one": "Not enough spots — only {{count}} left",
     "errorSpots_other": "Not enough spots — only {{count}} left",
-    "errorSubmit": "Submission failed, please try again."
+    "errorSubmit": "Submission failed, please try again.",
+    "incompleteProfileHint": "Profile incomplete. Please go to 'Profile' in the top right to update your details."
   },
   "success": {
     "waitlistTitle": "You're on the waitlist",

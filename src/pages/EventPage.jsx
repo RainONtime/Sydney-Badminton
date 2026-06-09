@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Check } from 'lucide-react'
 import {
@@ -35,6 +35,7 @@ function formFromProfile(profile) {
 
 export default function EventPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { t } = useTranslation()
 
   // ── Core data ──────────────────────────────────────────────────────────
@@ -51,6 +52,7 @@ export default function EventPage() {
   const [wasWaitlisted, setWasWaitlisted] = useState(false)
 
   // ── Auth / profile / existing booking ─────────────────────────────────
+  const [session, setSession]               = useState(null)
   const [userProfile, setUserProfile]       = useState(null)
   const [myRegistration, setMyRegistration] = useState(null)
 
@@ -86,6 +88,7 @@ export default function EventPage() {
 
       setEvent(ev)
       setRegistrations(regs || [])
+      setSession(session)   // persist for render-time use
 
       if (session?.user && ev) {
         // Fetch profile + existing booking concurrently (only for logged-in users)
@@ -259,7 +262,24 @@ export default function EventPage() {
         {/* ── Registration area ──────────────────────────────────────── */}
         <div className="mb-10">
 
-          {myRegistration ? (
+          {!session ? (
+            /* ── Login gate — button-first, ghost hint below ────────── */
+            <div className="py-6 w-full flex flex-col items-center justify-center gap-3">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full sm:w-72 py-3.5 rounded-full text-white font-bold text-base
+                           transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5
+                           hover:shadow-md active:scale-95"
+                style={{ background: 'linear-gradient(to right, #A88BFA, #F472B6)' }}
+              >
+                {t('nav.login')}
+              </button>
+              <span className="text-xs text-[#4B4552]/40 font-medium tracking-wide">
+                {t('event.loginRequiredSimple')}
+              </span>
+            </div>
+
+          ) : myRegistration ? (
             /* ── 我的门票 card (already registered) ─────────────────── */
             <div
               className="bg-white rounded-[2rem] p-6"

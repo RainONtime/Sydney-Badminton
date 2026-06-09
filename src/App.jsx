@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
 import Navbar from './components/layout/Navbar'
 import Home from './pages/Home'
 import EventPage from './pages/EventPage'
@@ -34,6 +35,7 @@ const AdminFallback = (
 
 export default function App() {
   return (
+    <AuthProvider>
     <div className="min-h-screen">
       <Navbar />
       <main>
@@ -82,5 +84,6 @@ export default function App() {
         </Routes>
       </main>
     </div>
+    </AuthProvider>
   )
 }

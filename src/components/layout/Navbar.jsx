@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Globe } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 import { clearAdminUser } from '../../services/authService'
+import { useAuth } from '../../contexts/AuthContext'
 
 const STORAGE_KEY = 'duoduo-lang'
 
@@ -19,20 +19,10 @@ export default function Navbar() {
   })()
   const isSuper = adminUser?.role === 'super'
 
-  // ── Public user session (Supabase Auth) ──────────────────────────────
-  const [session, setSession] = useState(null)
-
-  useEffect(() => {
-    // Hydrate immediately from persisted session
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
-
-    // Keep in sync with login / logout events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
+  // ── Public user session (Supabase Auth) — from global AuthContext ────
+  // Using the shared context avoids a duplicate getSession() call and provides
+  // isAuthLoading so we can suppress the login button until auth state is known.
+  const { session, isAuthLoading } = useAuth()
 
   // ── Logout handlers ───────────────────────────────────────────────────
   function handleAdminLogout() {
@@ -65,18 +55,27 @@ export default function Navbar() {
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-5 flex items-center justify-between" style={{ height: 54 }}>
 
-        {/* Brand mark */}
-        <Link to="/" className="flex items-center gap-2.5 select-none">
-          <img src="/logo.png" alt="Duoduo Badminton" className="w-9 h-9 shrink-0 transition-transform duration-300 hover:scale-110" />
-          <div className="hidden sm:block leading-none">
-            <p className="leading-none" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.01em', color: '#4B4552' }}>
-              DUODUO
-            </p>
-            <p className="leading-none mt-[4px]" style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.18em', color: '#A88BFA', opacity: 0.75 }}>
-              BADMINTON
-            </p>
-          </div>
-        </Link>
+        {/* Brand mark + home link */}
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center gap-2.5 select-none">
+            <img src="/logo.png" alt="Duoduo Badminton" className="w-9 h-9 shrink-0 transition-transform duration-300 hover:scale-110" />
+            <div className="hidden sm:block leading-none">
+              <p className="leading-none" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.01em', color: '#4B4552' }}>
+                DUODUO
+              </p>
+              <p className="leading-none mt-[4px]" style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.18em', color: '#A88BFA', opacity: 0.75 }}>
+                BADMINTON
+              </p>
+            </div>
+          </Link>
+          <Link
+            to="/"
+            className="hidden sm:block text-sm font-extrabold hover:text-brand transition-colors ml-3"
+            style={{ color: '#4B4552' }}
+          >
+            {t('nav.home')}
+          </Link>
+        </div>
 
         {/* Nav actions */}
         <div className="flex items-center gap-0.5 sm:gap-1">
@@ -114,6 +113,13 @@ export default function Navbar() {
                 {t('nav.logout')}
               </button>
             </>
+
+          ) : isAuthLoading ? (
+            /* ── Auth state unknown — ghost pill prevents layout shift ─── */
+            /* Shown only for the ~50ms it takes getSession() to read local
+               storage. Prevents the login button flashing in for logged-in
+               users before their session is confirmed.                      */
+            <span className="w-16 h-7 rounded-full bg-violet-50 animate-pulse inline-block" />
 
           ) : session ? (
             /* ── Public user logged in via Supabase Auth ───────────────── */

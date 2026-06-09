@@ -41,6 +41,41 @@ async function deleteStorageFile(url) {
   }
 }
 
+// ── Storage: payment screenshots ─────────────────────────────────────────────
+
+/**
+ * Upload a payment screenshot File/Blob to the `payment_screenshots` Storage bucket.
+ * Generates a collision-proof path: `{eventId}/{timestamp}_{random}.jpg`.
+ * Always uses `upsert: true` to avoid 409 conflicts on retry.
+ *
+ * @param {File|Blob} file      — the image file to upload
+ * @param {string}    eventId   — used as the folder prefix in the bucket
+ * @returns {Promise<string>}   — the public URL of the uploaded file
+ * @throws  {Error}             — surfaces the real Supabase error if upload fails
+ */
+export async function uploadPaymentScreenshot(file, eventId) {
+  const filePath = `${eventId}/${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`
+
+  const { data, error } = await supabase.storage
+    .from('payment_screenshots')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true,
+      contentType: file.type || 'image/jpeg',
+    })
+
+  if (error) {
+    console.error('Storage Upload Error:', error)
+    throw new Error(`截图上传失败: ${error.message}`)
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('payment_screenshots')
+    .getPublicUrl(data.path)
+
+  return publicUrl
+}
+
 // ── Events (public) ───────────────────────────────────────────────────────────
 
 /**
