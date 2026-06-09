@@ -3,7 +3,11 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Navbar from './components/layout/Navbar'
 import Home from './pages/Home'
 import EventPage from './pages/EventPage'
+import Login from './pages/Login'
 import LoadingSpinner from './components/ui/LoadingSpinner'
+
+// Profile page — lazy-loaded (only pulled in when user navigates to /profile)
+const Profile = lazy(() => import('./pages/Profile'))
 
 // Admin pages — lazy-loaded so public users never download admin code
 const AdminLogin         = lazy(() => import('./pages/admin/AdminLogin'))
@@ -12,6 +16,7 @@ const AdminEventForm     = lazy(() => import('./pages/admin/AdminEventForm'))
 const AdminRegistrations = lazy(() => import('./pages/admin/AdminRegistrations'))
 const AdminOrganizers    = lazy(() => import('./pages/admin/AdminOrganizers'))
 
+// Admin route guard — reads the sessionStorage set by AdminLogin
 function RequireAuth({ children }) {
   const location = useLocation()
   const user = (() => {
@@ -36,6 +41,12 @@ export default function App() {
           {/* Public — eagerly loaded */}
           <Route path="/" element={<Home />} />
           <Route path="/events/:id" element={<EventPage />} />
+          <Route path="/login" element={<Login />} />
+
+          {/* Profile — lazy loaded */}
+          <Route path="/profile" element={
+            <Suspense fallback={AdminFallback}><Profile /></Suspense>
+          } />
 
           {/* Admin — lazy loaded, isolated chunk */}
           <Route path="/admin/login" element={

@@ -289,6 +289,40 @@ export async function adminLogin(password) {
   return { data: { id: data.id, name: data.name, role: data.role }, error: null }
 }
 
+// ── User Profiles (Supabase Auth public users) ────────────────────────────────
+
+/**
+ * Fetch the profile for a logged-in public user.
+ * Returns null (not an error) when no profile row exists yet.
+ * @param {string} userId — `session.user.id` from Supabase Auth
+ * @returns {Promise<import('../types').ServiceResult>}
+ */
+export async function getUserProfile(userId) {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', userId)
+    .maybeSingle()
+  return { data: data ?? null, error: toAppError(error) }
+}
+
+/**
+ * Upsert profile fields for a logged-in public user.
+ * Supported fields: display_name, gender, contact_info, skill_level, avatar_url.
+ * @param {string} userId
+ * @param {Partial<{ display_name: string, gender: string, contact_info: string, skill_level: string }>} updates
+ * @returns {Promise<import('../types').ServiceResult>}
+ */
+export async function updateUserProfile(userId, updates) {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update(updates)
+    .eq('id', userId)
+    .select()
+    .single()
+  return { data: data ?? null, error: toAppError(error) }
+}
+
 // ── Registrations ─────────────────────────────────────────────────────────────
 
 /**
@@ -336,15 +370,40 @@ export async function getRegistrationCount(eventId) {
 
 /** @returns {Promise<import('../types').ServiceResult>} */
 export async function createRegistration(registration) {
+  // Silently attach the logged-in user's id; falls back to null for guests
+  const { data: { session } } = await supabase.auth.getSession()
+  const user_id = session?.user?.id ?? null
+
   const { data, error } = await supabase
     .from('registrations')
     .insert([{
       ...registration,
+      user_id,
       payment_status: registration.payment_status || 'pending',
     }])
     .select()
     .single()
   return { data: data || null, error: toAppError(error) }
+}
+
+/**
+ * Check if a logged-in user already has an active (non-rejected) registration
+ * for a given event. Returns null when no such registration exists.
+ * @param {string} eventId
+ * @param {string} userId — `session.user.id` from Supabase Auth
+ * @returns {Promise<import('../types').ServiceResult>}
+ */
+export async function getUserRegistrationForEvent(eventId, userId) {
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('*')
+    .eq('event_id', eventId)
+    .eq('user_id', userId)
+    .neq('payment_status', 'rejected')   // rejected → allow re-registration
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()                        // returns null instead of error when empty
+  return { data: data ?? null, error: toAppError(error) }
 }
 
 /** @returns {Promise<import('../types').ServiceResult>} */

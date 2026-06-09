@@ -11,7 +11,9 @@
     "adminEvents": "Manage Events",
     "organizers": "Organisers",
     "logout": "Log out",
-    "adminLogin": "Organiser Login"
+    "adminLogin": "Organiser Login",
+    "login": "Login",
+    "myProfile": "Profile"
   },
   "home": {
     "title": "Events",
@@ -188,6 +190,27 @@
       "deleteTitle": "Delete organiser",
       "passwordNote": "Each password must be unique (Mock mode uses passwords to identify accounts). After connecting Supabase Auth, login will switch to email + password."
     }
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Saved details auto-fill your RSVP form",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "Your name or WeChat nickname",
+    "gender": "Gender",
+    "skillLevel": "Skill Level (optional)",
+    "levelNone": "Any",
+    "contactInfo": "Contact Info (optional)",
+    "contactInfoPlaceholder": "WeChat ID / phone number",
+    "contactInfoHint": "Auto-filled into the notes field when you RSVP",
+    "save": "Save Profile",
+    "saving": "Saving…",
+    "saveSuccess": "Profile updated ✓",
+    "saveError": "Failed to save — please try again",
+    "notLoggedIn": "You're not logged in",
+    "notLoggedInHint": "Sign in to save your profile and auto-fill RSVP forms",
+    "loading": "Loading…",
+    "loadError": "Failed to load profile",
+    "backToHome": "Back to events"
   },
   "payment": {
     "free": "This event is free",

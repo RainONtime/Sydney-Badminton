@@ -11,7 +11,9 @@
     "adminEvents": "活动管理",
     "organizers": "组织者",
     "logout": "退出",
-    "adminLogin": "组织者登录"
+    "adminLogin": "组织者登录",
+    "login": "登录",
+    "myProfile": "主页"
   },
   "home": {
     "title": "活动",
@@ -188,6 +190,27 @@
       "deleteTitle": "删除组织者",
       "passwordNote": "每个密码须唯一（Mock 模式通过密码区分账号）。接入 Supabase Auth 后将改为邮箱 + 密码登录。"
     }
+  },
+  "profile": {
+    "title": "我的资料",
+    "subtitle": "报名时将自动填入以下信息",
+    "displayName": "显示名字",
+    "displayNamePlaceholder": "你的名字或微信昵称",
+    "gender": "性别",
+    "skillLevel": "中羽等级（选填）",
+    "levelNone": "不填",
+    "contactInfo": "联系方式（选填）",
+    "contactInfoPlaceholder": "微信号 / 手机号",
+    "contactInfoHint": "报名时将自动填入备注栏",
+    "save": "保存资料",
+    "saving": "保存中…",
+    "saveSuccess": "资料已更新 ✓",
+    "saveError": "保存失败，请稍后重试",
+    "notLoggedIn": "请先登录",
+    "notLoggedInHint": "登录后可保存个人资料，报名时自动填充",
+    "loading": "加载中…",
+    "loadError": "资料加载失败",
+    "backToHome": "返回首页"
   },
   "payment": {
     "free": "本次活动免费",

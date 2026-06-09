@@ -1,26 +1,51 @@
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Globe } from 'lucide-react'
+import { supabase } from '../../services/supabase'
 import { clearAdminUser } from '../../services/authService'
 
 const STORAGE_KEY = 'duoduo-lang'
 
 export default function Navbar() {
-  const location = useLocation()
-  const navigate = useNavigate()
+  const location  = useLocation()
+  const navigate  = useNavigate()
   const { t, i18n } = useTranslation()
-  const isAdmin = location.pathname.startsWith('/admin')
+  const isAdmin   = location.pathname.startsWith('/admin')
 
+  // ── Admin session (sessionStorage, unchanged) ────────────────────────
   const adminUser = (() => {
     try { return JSON.parse(sessionStorage.getItem('admin_user') || 'null') } catch { return null }
   })()
   const isSuper = adminUser?.role === 'super'
 
-  function handleLogout() {
+  // ── Public user session (Supabase Auth) ──────────────────────────────
+  const [session, setSession] = useState(null)
+
+  useEffect(() => {
+    // Hydrate immediately from persisted session
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+
+    // Keep in sync with login / logout events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // ── Logout handlers ───────────────────────────────────────────────────
+  function handleAdminLogout() {
     clearAdminUser()
     navigate('/admin/login')
   }
 
+  async function handlePublicLogout() {
+    await supabase.auth.signOut()
+    navigate('/')
+  }
+
+  // ── Language toggle ───────────────────────────────────────────────────
   function toggleLang() {
     const next = i18n.language === 'zh' ? 'en' : 'zh'
     i18n.changeLanguage(next)
@@ -56,7 +81,7 @@ export default function Navbar() {
         {/* Nav actions */}
         <div className="flex items-center gap-0.5 sm:gap-1">
 
-          {/* Language toggle */}
+          {/* Language toggle — always visible */}
           <button
             onClick={toggleLang}
             className="btn-ghost flex items-center gap-1 text-xs px-2 sm:px-2.5"
@@ -69,6 +94,7 @@ export default function Navbar() {
           <span className="w-px h-4 bg-violet-100 mx-0.5" />
 
           {isAdmin ? (
+            /* ── Admin area: keep existing nav exactly as-is ──────────── */
             <>
               <Link
                 to="/admin"
@@ -84,17 +110,47 @@ export default function Navbar() {
                   {t('nav.organizers')}
                 </Link>
               )}
-              <button onClick={handleLogout} className="btn-ghost text-xs px-2 sm:px-3">
+              <button onClick={handleAdminLogout} className="btn-ghost text-xs px-2 sm:px-3">
                 {t('nav.logout')}
               </button>
             </>
-          ) : (
-            <Link to="/admin" className="btn-ghost text-xs px-2 sm:px-3">
-              {t('nav.adminLogin')}
-            </Link>
-          )}
-        </div>
 
+          ) : session ? (
+            /* ── Public user logged in via Supabase Auth ───────────────── */
+            <>
+              {/* Profile link — active highlight when on /profile */}
+              <Link
+                to="/profile"
+                className={`btn-ghost text-xs px-2 sm:px-3 ${location.pathname === '/profile' ? 'text-violet-500' : ''}`}
+              >
+                {t('nav.myProfile')}
+              </Link>
+
+              {/* Soft logout — lightweight, non-competing with primary actions */}
+              <button
+                onClick={handlePublicLogout}
+                className="btn-ghost text-xs px-2 sm:px-3"
+                style={{ color: '#C4B5FD' }}
+              >
+                {t('nav.logout')}
+              </button>
+
+            </>
+
+          ) : (
+            /* ── Public user not logged in ─────────────────────────────── */
+            /* Login — gradient pill, stands out as the primary CTA */
+            <button
+              onClick={() => navigate('/login')}
+              className="text-xs px-3 py-[5px] rounded-full font-semibold leading-none
+                         transition-all duration-200 hover:opacity-90 active:scale-95"
+              style={{ background: 'linear-gradient(to right, #A88BFA, #F472B6)', color: '#fff' }}
+            >
+              {t('nav.login')}
+            </button>
+          )}
+
+        </div>
       </div>
     </nav>
   )

@@ -79,6 +79,8 @@ CREATE INDEX IF NOT EXISTS events_date_idx         ON events (date);
 CREATE TABLE IF NOT EXISTS registrations (
   id                  UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id            UUID         NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  -- Optional link to auth.users; NULL for guest registrations
+  user_id             UUID         REFERENCES auth.users(id) ON DELETE SET NULL,
 
   name                TEXT         NOT NULL,
   gender              TEXT         NOT NULL CHECK (gender IN ('male', 'female', 'other')),
@@ -96,6 +98,7 @@ CREATE TABLE IF NOT EXISTS registrations (
 
 CREATE INDEX IF NOT EXISTS registrations_event_id_idx      ON registrations (event_id);
 CREATE INDEX IF NOT EXISTS registrations_payment_status_idx ON registrations (payment_status);
+CREATE INDEX IF NOT EXISTS idx_registrations_user_id        ON registrations (user_id);
 
 
 -- =============================================================================
@@ -155,3 +158,78 @@ CREATE POLICY "registrations_anon_all" ON registrations
 INSERT INTO organizers (name, password, role)
 VALUES ('超级管理员', 'super2024', 'super')
 ON CONFLICT DO NOTHING;
+
+
+-- =============================================================================
+-- User Profiles (Supabase Auth integration)
+-- Run this block AFTER enabling Supabase Auth in your project.
+-- =============================================================================
+
+-- 4. user_profiles — one row per auth.users entry
+CREATE TABLE IF NOT EXISTS user_profiles (
+  id           UUID         REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  display_name TEXT,
+  avatar_url   TEXT,
+  gender       TEXT         CHECK (gender IN ('male', 'female', 'other')),
+  contact_info TEXT,
+  skill_level  TEXT         CHECK (skill_level IN ('1','2','3','4','5','6')),
+  created_at   TIMESTAMPTZ  DEFAULT NOW()
+);
+
+-- RLS
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view all profiles"
+  ON user_profiles FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Users can update own profile"
+  ON user_profiles FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = id);
+
+-- Trigger: auto-create profile on first sign-up (Google OAuth or email)
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.user_profiles (id, display_name, avatar_url)
+  VALUES (
+    new.id,
+    COALESCE(
+      new.raw_user_meta_data->>'full_name',
+      new.raw_user_meta_data->>'name',
+      '羽毛球爱好者'
+    ),
+    new.raw_user_meta_data->>'avatar_url'
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+
+-- =============================================================================
+-- Migration: extend user_profiles with badminton-specific fields
+-- Run this block in Supabase SQL Editor if the table already exists.
+-- Safe to re-run (IF NOT EXISTS guards).
+-- =============================================================================
+ALTER TABLE user_profiles
+  ADD COLUMN IF NOT EXISTS gender       TEXT CHECK (gender IN ('male', 'female', 'other')),
+  ADD COLUMN IF NOT EXISTS contact_info TEXT,
+  ADD COLUMN IF NOT EXISTS skill_level  TEXT CHECK (skill_level IN ('1','2','3','4','5','6'));
+
+-- =============================================================================
+-- Migration: add user_id FK to registrations (links logged-in users to their bookings)
+-- Run this block in Supabase SQL Editor if the table already exists.
+-- Safe to re-run (IF NOT EXISTS guards).
+-- =============================================================================
+ALTER TABLE registrations
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_registrations_user_id ON registrations (user_id);
