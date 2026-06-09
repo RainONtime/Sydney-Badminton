@@ -79,7 +79,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-5 py-12">
+    <div className="min-h-screen flex items-start sm:items-center justify-center px-5 pt-4 sm:py-12 pb-12">
       {/* 卡片 */}
       <div
         className="w-full max-w-sm bg-white rounded-[2rem] p-8"
@@ -89,11 +89,11 @@ export default function Login() {
         }}
       >
         {/* 品牌 */}
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-5 sm:mb-8">
           <img
             src="/logo.png"
             alt="Duoduo Badminton"
-            className="w-20 h-20 mb-4 transition-transform duration-300 hover:scale-105"
+            className="w-16 h-16 sm:w-20 sm:h-20 mb-3 sm:mb-4 transition-transform duration-300 hover:scale-105"
           />
           <p className="text-xs font-semibold tracking-widest text-brand opacity-70 uppercase">
             Duoduo Badminton

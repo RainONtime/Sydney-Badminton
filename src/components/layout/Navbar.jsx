@@ -59,6 +59,7 @@ export default function Navbar() {
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-2.5 select-none">
             <img src="/logo.png" alt="Duoduo Badminton" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 transition-transform duration-300 hover:scale-110" />
+            {/* Desktop: stacked brand name */}
             <div className="hidden sm:block leading-none">
               <p className="leading-none" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.01em', color: '#4B4552' }}>
                 DUODUO
@@ -67,6 +68,10 @@ export default function Navbar() {
                 BADMINTON
               </p>
             </div>
+            {/* Mobile: inline "主页" label so the tap target is obvious */}
+            <span className="sm:hidden text-sm font-bold whitespace-nowrap" style={{ color: '#4B4552' }}>
+              主页
+            </span>
           </Link>
           <Link
             to="/"
